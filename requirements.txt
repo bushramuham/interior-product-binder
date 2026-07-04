@@ -1,0 +1,13 @@
+anthropic
+python-dotenv
+PyMuPDF
+requests
+beautifulsoup4
+Pillow
+reportlab
+openpyxl
+
+# Notebook front-end (optional; only needed for binder_builder.ipynb).
+# Pinned <8 so the bundled widget assets stay within Windows' 260-char path
+# limit when the repo lives under a long folder (e.g. OneDrive\Desktop\...).
+ipywidgets<8

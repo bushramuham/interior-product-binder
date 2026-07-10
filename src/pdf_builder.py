@@ -39,6 +39,8 @@ NAVY = colors.HexColor("#25408f")        # KEY codes + descriptions
 LOGO_GREEN = colors.HexColor("#8a9a3a")  # "architects" in the fallback text logo
 CHARCOAL = colors.HexColor("#404040")    # fallback text logo, cover labels
 WATERMARK = colors.HexColor("#cdcdcd")   # diagonal DRAFT watermark
+DRAFT_RED = colors.HexColor("#ec1c24")   # "DRAFT ... NOT FOR CONSTRUCTION" banner
+DRAFT_RED_ALPHA = 0.5                    # half-tone (screened) red
 MARGIN = 0.5 * inch                      # matches the firm's page margins
 
 _styles = getSampleStyleSheet()
@@ -107,6 +109,11 @@ def _date_long() -> str:
     return f"{d.month}/{d.day}/{d.year}"
 
 
+def _date_short() -> str:
+    d = datetime.date.today()
+    return f"{d.month}/{d.day}/{str(d.year)[-2:]}"
+
+
 class _BinderDoc(SimpleDocTemplate):
     """SimpleDocTemplate that records the page each tagged product heading lands on."""
 
@@ -130,6 +137,20 @@ def _draw_footer(canvas, project_name: str) -> None:
     # The firm's footer uses a short project name (text before the first " - ").
     short = project_name.split(" - ")[0].strip() or project_name
     canvas.saveState()
+    # Half-tone red draft banner, centered above the footer line, on every page.
+    canvas.setFont("Helvetica-Bold", 14)
+    canvas.setFillColor(DRAFT_RED)
+    try:
+        canvas.setFillAlpha(DRAFT_RED_ALPHA)
+    except Exception:
+        pass
+    canvas.drawCentredString(
+        width / 2, 44, f"DRAFT {_date_short()} - NOT FOR CONSTRUCTION"
+    )
+    try:
+        canvas.setFillAlpha(1)
+    except Exception:
+        pass
     canvas.setFillColor(colors.black)
     # Company name left-aligned.
     canvas.setFont("Helvetica", 10)

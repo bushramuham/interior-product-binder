@@ -136,7 +136,7 @@ def main() -> int:
     render("binder_demo.pdf", "page_cover.png", "prepared by")
     render("binder_demo.pdf", "page_toc.png", "table of contents")
     render("binder_demo.pdf", "page_vanity_grouped.png", "u-36", "materials")
-    render("binder_demo.pdf", "page_chair.png", "ch-01", "materials")
+    render("binder_demo.pdf", "page_chair.png", "ch-01", "dimensions")  # product page, not TOC
     render("binder_demo.pdf", "page_owner.png", "owner input needed")
     render("binder_mixed.pdf", "page_web_eames.png", "eames", "materials")
     render("binder_errors.pdf", "page_error_block.png", "could not generate")

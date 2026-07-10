@@ -2,32 +2,32 @@
   "model": "claude-sonnet-4-6",
   "input_excerpt": "Product keys: U-36, U-37, U-03\nSchedule descriptions: VANITY CABINET - 60-IN | VANITY COUNTERTOP - 60-IN | MARBLE TOP | BATHROOM SINK | UNDERMOUNT | CERAMIC BASIN\n\nExtracted source text:\nMARLOW 60-in Double Vanity Suite \u2014 Model\nMV-6022\nCalderhouse Bath\nThe MARLOW vanity suite combines a 60-inch solid-birch cabinet, a honed Carrara marble countertop,\nand two undermount ceramic basins sold as a coordinated set.\nCabinet: 60 in W x 22 in D x 34 in H, two soft-close doors and six dovetailed drawers. Countertop: 61 in\nW x 22.5 in D x 1.25 in thick, pre-drilled for 8-in widespread faucets.\nMaterials: solid birch cabinet with plywood box, natural Carrara marble top, vitreous china basins.\nFinishes: cabinet in dove white, storm grey, or natural birch; polished nickel or matte black hardware.\nCertifications: cUPC listed basins. CARB Phase 2 compliant casework.\nInstallation: secure cabinet to wall studs with included cleats. Marble top requires two installers; seal\nbefore first use. Rough-in drain at 21 in AFF recommended.\nCare: reseal marble every 12 months. Clean with pH-neutral stone cleaner only. Wipe cabinet with\ndamp cloth.\n",
   "structured_output": {
-    "product_name": "MARLOW 60-in Double Vanity Cabinet",
+    "product_name": "MARLOW 60-in Double Vanity Suite \u2013 Cabinet (Model MV-6022)",
     "manufacturer": "Calderhouse Bath",
-    "description": "The Marlow Double Vanity Cabinet is the casework component of the coordinated Marlow 60-in Double Vanity Suite (Model MV-6022) by Calderhouse Bath. The cabinet is constructed of solid birch with a plywood box and features two soft-close doors and six dovetailed drawers. It is offered in three finish colors with a choice of polished nickel or matte black hardware. The unit is designed to receive the coordinating Carrara marble countertop and undermount ceramic basins sold as part of the suite.",
-    "dimensions": "60 in W x 22 in D x 34 in H",
-    "materials": "Solid birch cabinet with plywood box",
-    "finishes": "Dove white, storm grey, or natural birch cabinet; polished nickel or matte black hardware",
+    "description": "The Marlow 60-in Double Vanity Cabinet is part of the Marlow vanity suite by Calderhouse Bath, sold as a coordinated set with a marble countertop and two undermount ceramic basins. The cabinet is constructed of solid birch with a plywood box and features two soft-close doors and six dovetailed drawers. It is available in three finish options with a choice of polished nickel or matte black hardware.",
+    "dimensions": "60 in W \u00d7 22 in D \u00d7 34 in H",
+    "materials": "Solid birch cabinet with plywood box construction",
+    "finishes": "Dove white, storm grey, or natural birch cabinet finish; polished nickel or matte black hardware",
     "certifications": "CARB Phase 2 compliant casework",
-    "installation_notes": "Secure cabinet to wall studs using included cleats. Rough-in drain at 21 in AFF recommended.",
+    "installation_notes": "Secure cabinet to wall studs using included cleats. Recommended rough-in drain at 21 in AFF.",
     "care_notes": "Wipe cabinet exterior with a damp cloth.",
     "important_specs": [
-      "Model: MV-6022 (suite)",
-      "2 soft-close doors",
-      "6 dovetailed drawers",
-      "Sold as coordinated suite with countertop and basins"
+      "Model: MV-6022",
+      "Part of the Marlow vanity suite \u2014 cabinet, countertop, and basins sold as a coordinated set",
+      "Two soft-close doors and six dovetailed drawers",
+      "Plywood box construction"
     ]
   },
   "usage_call_1": {
     "input_tokens": 787,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 1048,
-    "output_tokens": 1306
+    "output_tokens": 1319
   },
   "usage_call_2": {
     "input_tokens": 787,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 1048,
-    "output_tokens": 1271
+    "output_tokens": 1348
   }
 }

@@ -19,8 +19,7 @@ FIRM_PRINCIPAL = "Kara Block AIA"
 FIRM_ROLE = "Principal"
 FIRM_EMAIL = "email: block@dfhaia.com"
 FIRM_LLP = "DFH ARCHITECTS LLP"
-FIRM_ADDRESS = "Los Angeles, CA"          # TODO: replace with the firm's real address
-FIRM_LOGO_PATH = "assets/dfh_logo.png"    # optional real logo; a text logo is drawn if absent
+FIRM_LOGO_PATH = "assets/dfh_logo.jpeg"   # real DFH logo; a text logo is drawn if absent
 BINDER_TAG = "INTERIOR FFE [DRAFT]"       # footer tag between project name and date
 
 USER_AGENT = (

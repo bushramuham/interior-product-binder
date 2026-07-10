@@ -34,24 +34,27 @@ TOC_ROWS_PER_PAGE = 32
 MAX_IMAGE_WIDTH = 3.6 * inch
 MAX_IMAGE_HEIGHT = 3.0 * inch
 
-# ─── DFH template palette (sampled from the reference binder) ─────────────────
-NAVY = colors.HexColor("#2b3a8c")        # KEY codes + descriptions
-DRAFT_RED = colors.HexColor("#d42a28")   # footer "DRAFT ... NOT FOR CONSTRUCTION"
-LOGO_GREEN = colors.HexColor("#8a9a3a")  # "architects" in the logo
-CHARCOAL = colors.HexColor("#404040")    # "dfh" in the logo, cover labels
-WATERMARK = colors.HexColor("#8a8a8a")   # diagonal DRAFT watermark
-FOOTER_GREY = colors.HexColor("#333333")
+# ─── DFH template palette (sampled from the firm's own binder PDF) ────────────
+NAVY = colors.HexColor("#25408f")        # KEY codes + descriptions
+LOGO_GREEN = colors.HexColor("#8a9a3a")  # "architects" in the fallback text logo
+CHARCOAL = colors.HexColor("#404040")    # fallback text logo, cover labels
+WATERMARK = colors.HexColor("#cdcdcd")   # diagonal DRAFT watermark
+MARGIN = 0.5 * inch                      # matches the firm's page margins
 
 _styles = getSampleStyleSheet()
 STYLE_COVER_LABEL = ParagraphStyle(
-    "CoverLabel", parent=_styles["Normal"], fontSize=12, fontName="Helvetica-Bold",
-    textColor=CHARCOAL,
+    "CoverLabel", parent=_styles["Normal"], fontSize=14, fontName="Helvetica-Bold",
+    textColor=colors.black,
 )
 STYLE_COVER_VALUE = ParagraphStyle(
-    "CoverValue", parent=_styles["Normal"], fontSize=13, textColor=CHARCOAL, alignment=2,
+    "CoverValue", parent=_styles["Normal"], fontSize=14, leading=17, textColor=colors.black,
+    alignment=0,
+)
+STYLE_FIRM_NAME = ParagraphStyle(
+    "FirmName", parent=_styles["Normal"], fontSize=14, leading=17, textColor=colors.black, alignment=2,
 )
 STYLE_FIRM = ParagraphStyle(
-    "Firm", parent=_styles["Normal"], fontSize=9.5, leading=12, textColor=CHARCOAL, alignment=2,
+    "Firm", parent=_styles["Normal"], fontSize=12, leading=15, textColor=colors.black, alignment=2,
 )
 STYLE_LOGO_MAIN = ParagraphStyle(
     "LogoMain", parent=_styles["Normal"], fontSize=34, leading=32,
@@ -62,12 +65,12 @@ STYLE_LOGO_SUB = ParagraphStyle(
     fontName="Helvetica", textColor=LOGO_GREEN, alignment=2,
 )
 STYLE_KEY_DESC = ParagraphStyle(
-    "KeyDesc", parent=_styles["Normal"], fontSize=9.5, leading=11,
+    "KeyDesc", parent=_styles["Normal"], fontSize=12, leading=14,
     textColor=NAVY, alignment=2,  # right, sits left of the code box
 )
 STYLE_CODE = ParagraphStyle(
-    "Code", parent=_styles["Normal"], fontSize=15, leading=17,
-    fontName="Helvetica-Bold", textColor=NAVY, alignment=1,
+    "Code", parent=_styles["Normal"], fontSize=26, leading=30,
+    fontName="Helvetica", textColor=NAVY, alignment=1,
 )
 STYLE_BRAND = ParagraphStyle(
     "Brand", parent=_styles["Normal"], fontSize=17, leading=20,
@@ -106,11 +109,6 @@ def _date_long() -> str:
     return f"{d.month}/{d.day}/{d.year}"
 
 
-def _date_short() -> str:
-    d = datetime.date.today()
-    return f"{d.month}/{d.day}/{str(d.year)[-2:]}"
-
-
 class _BinderDoc(SimpleDocTemplate):
     """SimpleDocTemplate that records the page each tagged product heading lands on."""
 
@@ -131,34 +129,34 @@ def _escape(text) -> str:
 # ─── Page furniture (footer on every page, watermark on the cover) ────────────
 def _draw_footer(canvas, project_name: str) -> None:
     width = letter[0]
+    # The firm's footer uses a short project name (text before the first " - ").
+    short = project_name.split(" - ")[0].strip() or project_name
     canvas.saveState()
-    canvas.setFont("Helvetica-Bold", 13)
-    canvas.setFillColor(DRAFT_RED)
-    canvas.drawCentredString(
-        width / 2, 40, f"DRAFT {_date_short()} - NOT FOR CONSTRUCTION"
+    canvas.setFillColor(colors.black)
+    # Company name left-aligned.
+    canvas.setFont("Helvetica", 10)
+    canvas.drawString(MARGIN, 24, config.FIRM_LLP)
+    # Everything else right-aligned: page number at the edge, project line to its left.
+    right = width - MARGIN
+    page_no = canvas.getPageNumber() - 1  # cover unnumbered; content from 1
+    if page_no >= 1:
+        canvas.setFont("Helvetica", 12)
+        canvas.drawRightString(right, 23, str(page_no))
+        right -= 0.45 * inch
+    canvas.setFont("Helvetica", 10)
+    canvas.drawRightString(
+        right, 24, f"{short} - {config.BINDER_TAG} - {_date_long()}"
     )
-    canvas.setFont("Helvetica", 6.5)
-    canvas.setFillColor(FOOTER_GREY)
-    canvas.drawString(0.6 * inch, 28, f"{config.FIRM_LLP}, {config.FIRM_ADDRESS}")
-    canvas.drawCentredString(
-        width / 2, 28,
-        f"{project_name} - {config.BINDER_TAG} - {_date_long()}",
-    )
-    canvas.drawRightString(width - 0.6 * inch, 28, str(canvas.getPageNumber()))
     canvas.restoreState()
 
 
 def _draw_watermark(canvas) -> None:
     canvas.saveState()
-    canvas.translate(letter[0] / 2, letter[1] / 2)
-    canvas.rotate(40)
-    canvas.setFont("Helvetica-Bold", 96)
-    try:
-        canvas.setFillAlpha(0.16)
-    except Exception:
-        pass
+    canvas.setFont("Helvetica", 144)
     canvas.setFillColor(WATERMARK)
-    canvas.drawCentredString(0, -25, "DRAFT")
+    canvas.translate(letter[0] * 0.40, letter[1] * 0.50)
+    canvas.rotate(45)
+    canvas.drawCentredString(0, 0, "DRAFT")
     canvas.restoreState()
 
 
@@ -177,19 +175,25 @@ def _image_flowable(path: str) -> Image | None:
 
 # ─── Cover ────────────────────────────────────────────────────────────────────
 def _logo_flowables() -> list:
-    """Real logo image if configured, else a drawn 'dfh architects' wordmark."""
-    if config.FIRM_LOGO_PATH and os.path.exists(config.FIRM_LOGO_PATH):
-        img = _image_flowable(config.FIRM_LOGO_PATH)
-        if img:
+    """The firm's logo image if present, else a drawn 'dfh architects' wordmark."""
+    path = config.FIRM_LOGO_PATH
+    if path and os.path.exists(path):
+        try:
+            with PILImage.open(path) as pil:
+                w, h = pil.size
+            width = 2.2 * inch
+            img = Image(path, width=width, height=width * h / w)
             img.hAlign = "RIGHT"
             return [img]
+        except Exception as e:
+            print(f"  WARNING: could not load logo '{path}': {e}")
     return [Paragraph("dfh", STYLE_LOGO_MAIN), Paragraph("architects", STYLE_LOGO_SUB)]
 
 
 def _firm_block() -> list:
     return _logo_flowables() + [
-        Spacer(1, 8),
-        Paragraph(f"<b>{_escape(config.FIRM_NAME)}</b>", STYLE_FIRM),
+        Spacer(1, 10),
+        Paragraph(_escape(config.FIRM_NAME), STYLE_FIRM_NAME),
         Paragraph(_escape(config.FIRM_PRINCIPAL), STYLE_FIRM),
         Paragraph(_escape(config.FIRM_ROLE), STYLE_FIRM),
         Paragraph(_escape(config.FIRM_EMAIL), STYLE_FIRM),
@@ -203,16 +207,16 @@ def _cover_story(project_name: str) -> list:
              Paragraph(_escape(project_name), STYLE_COVER_VALUE)],
             [Paragraph("PREPARED BY:", STYLE_COVER_LABEL), _firm_block()],
         ],
-        colWidths=[2.3 * inch, 4.35 * inch],
+        colWidths=[3.0 * inch, 4.5 * inch],
     )
     tbl.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("ALIGN", (1, 0), (1, -1), "RIGHT"),
-        ("TOPPADDING", (0, 1), (-1, 1), 64),
+        ("TOPPADDING", (0, 1), (-1, 1), 80),
         ("LEFTPADDING", (0, 0), (-1, -1), 0),
         ("RIGHTPADDING", (0, 0), (-1, -1), 0),
     ]))
-    return [Spacer(1, 1.3 * inch), tbl, PageBreak()]
+    return [tbl, PageBreak()]
 
 
 # ─── Product page pieces ──────────────────────────────────────────────────────
@@ -223,7 +227,7 @@ def _key_desc_block(product) -> Table:
          Paragraph(_escape(e.key), STYLE_CODE)]
         for e in product.entries
     ]
-    block = Table(rows, colWidths=[3.2 * inch, 0.9 * inch], hAlign="RIGHT")
+    block = Table(rows, colWidths=[3.2 * inch, 1.05 * inch], hAlign="RIGHT")
     block.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ALIGN", (0, 0), (0, -1), "RIGHT"),
@@ -324,25 +328,26 @@ def _toc_pages_needed(results: list[ProductResult]) -> int:
 def _toc_story(
     results: list[ProductResult], page_numbers: dict[str, int], toc_pages: int
 ) -> list:
-    rows = [["KEY", "DESCRIPTION", "PG"]]
+    rows = [["KEY", "DESCRIPTION", "P#"]]
     for result in results:
-        pg = page_numbers.get(result.product.group_id, "?")
+        pg = page_numbers.get(result.product.group_id)
+        pg_str = str(pg - 1) if isinstance(pg, int) else "?"  # cover unnumbered
         for entry in result.product.entries:
-            rows.append([entry.key, entry.description, str(pg)])
+            rows.append([entry.key, entry.description, pg_str])
 
     story: list = [Paragraph("TABLE OF CONTENTS", STYLE_TOC_TITLE)]
     for page_idx in range(toc_pages):
         chunk = rows[1:][page_idx * TOC_ROWS_PER_PAGE:(page_idx + 1) * TOC_ROWS_PER_PAGE]
         table = Table(
             [rows[0]] + chunk,
-            colWidths=[0.9 * inch, 4.6 * inch, 0.7 * inch],
+            colWidths=[0.9 * inch, 5.9 * inch, 0.7 * inch],
             repeatRows=1,
         )
         table.setStyle(TableStyle([
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
             ("BACKGROUND", (0, 0), (-1, 0), NAVY),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("FONTSIZE", (0, 0), (-1, -1), 10),
             ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
             ("ALIGN", (2, 0), (2, -1), "CENTER"),
             ("TOPPADDING", (0, 0), (-1, -1), 3),
@@ -365,10 +370,10 @@ def _build_doc(target, story, project_name: str) -> "_BinderDoc":
     doc = _BinderDoc(
         target,
         pagesize=letter,
-        leftMargin=0.9 * inch,
-        rightMargin=0.9 * inch,
-        topMargin=0.9 * inch,
-        bottomMargin=0.95 * inch,  # leaves room for the two-line draft footer
+        leftMargin=MARGIN,
+        rightMargin=MARGIN,
+        topMargin=MARGIN,
+        bottomMargin=0.6 * inch,  # leaves room for the footer
         title="Interior Product Binder",
     )
 

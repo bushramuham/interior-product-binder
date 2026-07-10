@@ -1,0 +1,14 @@
+Reading schedule: examples/example_errors.xlsx
+Found 4 product group(s)
+[1/4] Processing CH-01 (examples/pdfs/sample_chair_spec.pdf)
+  ok: AXEL Lounge Chair — Model AX-200
+[2/4] Processing XX-01 (products/does_not_exist.pdf)
+  extraction failed: File not found: products/does_not_exist.pdf
+[3/4] Processing XX-02 (https://this-domain-does-not-exist-xyz123.example.invalid/product)
+  extraction failed: Could not fetch URL 'https://this-domain-does-not-exist-xyz123.example.invalid/product': HTTPSConnectionPool(host='this-domain-does-not-exist-xyz123.example.invalid', port=443): Max retries exceeded with url: /product (Caused by NameResolutionError("HTTPSConnection(host='this-domain-does-not-exist-xyz123.example.invalid', port=443): Failed to resolve 'this-domain-does-not-exist-xyz123.example.invalid' ([Errno 11001] getaddrinfo failed)"))
+[4/4] Processing U-36, U-37 (examples/pdfs/sample_vanity_spec.pdf)
+  ok: MARLOW 60-in Double Vanity Suite – Cabinet (U-36)
+Building binder: submission\Bushra_Muhammadi_Assignment07\assets\binder_errors.pdf
+Binder written to: submission\Bushra_Muhammadi_Assignment07\assets\binder_errors.pdf
+
+Done. 4 group(s): 2 ok, 2 failed.

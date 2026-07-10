@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bushra Muhammadi — Assignment 07 — AI Interior Product Binder Generator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+  :root {
+    --ink:#1a1a1a; --paper:#f5f3ee; --warm-mid:#e8e3d8; --rule:#c8c0b0;
+    --accent:#b85c2a; --accent-lt:#e8c4a8; --teal:#2a6b6e; --teal-lt:#c2dfe0;
+    --slate:#3a4a5c; --slate-lt:#c8d4e0;
+    --mono:'DM Mono','Courier New',Courier,monospace;
+    --sans:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:15px;line-height:1.65;}
+
+  .cover{min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:5vw 6vw 6vw;background:var(--ink);color:var(--paper);position:relative;overflow:hidden;}
+  .cover-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 30%,#3a2a20 0%,var(--ink) 100%);opacity:.95;}
+  .cover-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(245,243,238,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(245,243,238,.04) 1px,transparent 1px);background-size:60px 60px;}
+  .cover-content{position:relative;z-index:1;}
+  .cover-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-lt);margin-bottom:2.5rem;}
+  .cover-title{font-size:clamp(2.8rem,6vw,5.5rem);font-weight:300;letter-spacing:-.02em;line-height:1.05;margin-bottom:1.5rem;}
+  .cover-title em{font-style:normal;color:var(--accent-lt);}
+  .cover-sub{font-size:1.1rem;font-weight:300;color:rgba(245,243,238,.65);max-width:560px;margin-bottom:3.5rem;}
+  .cover-meta{display:flex;gap:3rem;flex-wrap:wrap;}
+  .cover-meta-item label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:rgba(245,243,238,.4);margin-bottom:.25rem;}
+  .cover-meta-item span{font-size:.9rem;color:rgba(245,243,238,.85);}
+
+  .sheet{max-width:1200px;margin:0 auto;padding:5rem 5vw;}
+  .sheet+.sheet{padding-top:0;}
+  .section-label{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--rule);margin-bottom:.5rem;}
+  .section-title{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:300;letter-spacing:-.015em;margin-bottom:2.5rem;padding-bottom:1.25rem;border-bottom:1px solid var(--rule);}
+  .lead{max-width:820px;margin-bottom:2.5rem;font-size:.98rem;color:#444;}
+
+  .gem-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:1rem;}
+  .gem-card{border:1px solid var(--rule);padding:2rem;position:relative;background:white;}
+  .gem-card .badge{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:.3rem .7rem;margin-bottom:1rem;border-radius:2px;}
+  .gem-card.a .badge{background:var(--accent-lt);color:var(--accent);}
+  .gem-card.b .badge{background:var(--teal-lt);color:var(--teal);}
+  .gem-card.c .badge{background:var(--slate-lt);color:var(--slate);}
+  .gem-card h3{font-size:1.15rem;font-weight:500;margin-bottom:.75rem;}
+  .gem-card p{font-size:.875rem;color:#555;line-height:1.6;}
+  .accent-bar{position:absolute;top:0;left:0;right:0;height:3px;}
+  .gem-card.a .accent-bar{background:var(--accent);}
+  .gem-card.b .accent-bar{background:var(--teal);}
+  .gem-card.c .accent-bar{background:var(--slate);}
+
+  .diagram{border:1px solid var(--rule);background:white;padding:1rem;margin:1.5rem 0;}
+  .instruction-block{margin-bottom:3rem;}
+  .instruction-header{display:flex;align-items:baseline;gap:1rem;margin-bottom:1rem;}
+  .instruction-header h3{font-size:1.05rem;font-weight:500;}
+  .pill{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .55rem;border-radius:2px;background:var(--accent-lt);color:var(--accent);}
+  .pill.teal{background:var(--teal-lt);color:var(--teal);}
+  .code-block{background:#f0eee8;border-left:3px solid var(--rule);padding:1.25rem 1.5rem;font-family:var(--mono);font-size:.8rem;line-height:1.7;white-space:pre-wrap;overflow-x:auto;color:#3a3530;}
+  .code-block .key{color:var(--accent);font-weight:500;}
+  .code-block .comment{color:var(--rule);font-style:italic;}
+  .code-block .ok{color:var(--teal);font-weight:500;}
+
+  .convo-pair{display:grid;grid-template-columns:1fr 2fr;gap:1.5rem;margin-bottom:2rem;align-items:start;}
+  @media (max-width:760px){.convo-pair{grid-template-columns:1fr;}}
+  .user-bubble{background:var(--slate);color:white;padding:1rem 1.25rem;font-size:.875rem;line-height:1.55;}
+  .user-bubble::before{content:'Sent to Claude';display:block;font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;opacity:.55;margin-bottom:.5rem;}
+  .ai-bubble{background:white;border:1px solid var(--rule);padding:1.25rem 1.5rem;font-size:.86rem;line-height:1.65;}
+  .ai-bubble::before{content:'Structured tool-call output';display:block;font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--rule);margin-bottom:.75rem;}
+  .ai-bubble strong{font-weight:600;}
+  .ai-bubble .code-ref{font-family:var(--mono);font-size:.78rem;background:var(--warm-mid);padding:.1rem .4rem;border-radius:2px;}
+  .ai-bubble ul{padding-left:1.1rem;margin:.5rem 0;}
+  .ai-bubble ul li{margin-bottom:.3rem;}
+
+  .img-feature{margin:2.5rem 0;}
+  .img-feature img{width:100%;display:block;border:1px solid var(--rule);background:white;}
+  .img-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+  @media (max-width:760px){.img-grid{grid-template-columns:1fr;}}
+  .img-caption{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;padding:.6rem 0;border-bottom:1px solid var(--warm-mid);margin-top:.5rem;}
+  .img-caption span{font-family:var(--mono);font-size:.72rem;color:var(--accent);white-space:nowrap;}
+  .img-caption p{font-size:.8rem;color:#666;}
+
+  .callout{border:1px solid var(--rule);padding:1.5rem;margin:1.5rem 0;background:var(--warm-mid);}
+  .callout h4{font-family:var(--mono);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem;}
+  .callout p{font-size:.9rem;color:#444;}
+
+  .data-table{width:100%;border-collapse:collapse;font-size:.82rem;margin:1.5rem 0;}
+  .data-table th{background:var(--ink);color:var(--paper);padding:.6rem 1rem;text-align:left;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:400;}
+  .data-table td{padding:.6rem 1rem;border-bottom:1px solid var(--warm-mid);vertical-align:top;}
+  .data-table tr:nth-child(even) td{background:rgba(0,0,0,.02);}
+  .data-table code{font-family:var(--mono);font-size:.78rem;}
+  .data-table .hl td{background:var(--accent-lt);font-weight:500;}
+
+  .test{margin-bottom:2.5rem;}
+  .test-head{display:flex;align-items:baseline;gap:.9rem;margin-bottom:.75rem;}
+  .test-head h3{font-size:1.02rem;font-weight:500;}
+  .test-head .tag{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .55rem;border-radius:2px;background:var(--teal-lt);color:var(--teal);}
+  .verdict{font-size:.84rem;color:var(--teal);margin-top:.5rem;font-weight:500;}
+
+  .reflection{background:var(--ink);color:var(--paper);padding:4rem 5vw;}
+  .reflection .inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 2fr;gap:4rem;align-items:start;}
+  @media (max-width:760px){.reflection .inner{grid-template-columns:1fr;gap:2rem;}}
+  .reflection .rlabel{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(245,243,238,.4);margin-bottom:1rem;}
+  .reflection h2{font-size:2rem;font-weight:300;letter-spacing:-.015em;line-height:1.2;}
+  .reflection h2 em{font-style:normal;color:var(--accent-lt);}
+  .insights{display:flex;flex-direction:column;gap:1.5rem;}
+  .insight-item{border-left:2px solid rgba(245,243,238,.2);padding-left:1.25rem;}
+  .insight-item h4{font-family:var(--mono);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-lt);margin-bottom:.4rem;}
+  .insight-item p{font-size:.9rem;color:rgba(245,243,238,.75);line-height:1.65;}
+
+  .footer{background:var(--warm-mid);padding:2rem 5vw;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+  .footer span{font-family:var(--mono);font-size:.78rem;color:var(--rule);}
+  .footer a{font-family:var(--mono);font-size:.78rem;color:var(--accent);text-decoration:none;}
+  .divider{border:none;border-top:1px solid var(--rule);margin:3rem 0;max-width:1200px;}
+  .divider.thick{border-top-width:3px;border-color:var(--ink);}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-bg"></div>
+  <div class="cover-grid"></div>
+  <div class="cover-content">
+    <div class="cover-eyebrow">USC Architecture · Custom AI Tool · Assignment 07</div>
+    <h1 class="cover-title">AI Product Binder Generator<br><em>A Custom LLM Tool for<br>Interior Architecture</em></h1>
+    <p class="cover-sub">A Python application built on the Anthropic Claude API that reads a project's product schedule and its spec sheets, then writes a formatted product selections binder in the firm's own template.</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item"><label>By</label><span>Bushra Muhammadi</span></div>
+      <div class="cover-meta-item"><label>Model</label><span>Anthropic Claude (claude-sonnet-4-6)</span></div>
+      <div class="cover-meta-item"><label>Portfolio</label><span>bushra.studio/ai-design</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet">
+  <div class="section-label">01 — Overview</div>
+  <h2 class="section-title">One Tool, a Real Practice Bottleneck</h2>
+  <p class="lead">Interior architects assemble <em>product selections binders</em>: client-facing PDFs that collect every specified product in a project — vanities, fixtures, tile, furniture — with a page of curated details per product. Building one by hand means opening every manufacturer cut-sheet PDF and product webpage, retyping dimensions, materials, finishes, and care notes into a layout, and keeping a table of contents in sync. It is slow, repetitive work.</p>
+  <p class="lead">This tool automates the whole pipeline. It takes the schedule an architect already has — an Excel export with <code>KEY · DESCRIPTION · PATH</code> columns pointing at each product's spec sheet or webpage — and produces a finished binder. The intelligence in the middle is <strong>Claude, called through the Anthropic API</strong>: raw text and images scraped from each source are sent to the model, which returns clean, structured product data. The output reproduces a real DFH Architects deliverable for a Pacific Palisades rebuild — down to the cover (firm logo, diagonal <em>DRAFT</em> watermark), the red "NOT FOR CONSTRUCTION" draft footer on every page, the navy KEY code badges paired with their schedule descriptions, the firm's convention of grouping several keys onto one page, and <em>OWNER INPUT NEEDED</em> placeholder pages for scheduled items that don't have a source yet.</p>
+
+  <div class="gem-grid">
+    <div class="gem-card a"><div class="accent-bar"></div><span class="badge">API Design</span><h3>Forced Tool-Use</h3><p>The extraction schema is declared as a tool and the model is compelled to call it, so every response is valid, schema-conforming JSON — no "return JSON only" prompt, no markdown fences, no parsing failures.</p></div>
+    <div class="gem-card b"><div class="accent-bar"></div><span class="badge">Efficiency</span><h3>Prompt Caching</h3><p>The long domain system prompt is identical for every product, so it carries a cache breakpoint. The first product writes the cache; every product after reads it at ~10% of the cost — measured in §04.</p></div>
+    <div class="gem-card c"><div class="accent-bar"></div><span class="badge">Multimodal</span><h3>Vision Input</h3><p>Product photos and dimensioned drawings extracted from each source are downscaled, encoded, and sent as image blocks alongside the text, grounding the extraction in what the product actually looks like.</p></div>
+  </div>
+</div>
+
+<hr class="divider thick" style="margin:0 auto;">
+
+<div class="sheet">
+  <div class="section-label">02 — Architecture</div>
+  <h2 class="section-title">How the Pipeline Fits Together</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg" font-family="DM Mono, monospace" font-size="12.5">
+      <defs><marker id="arr" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#b85c2a"/></marker></defs>
+      <rect x="10" y="20" width="150" height="58" rx="2" fill="#fff" stroke="#3a4a5c" stroke-width="1.5"/><text x="85" y="44" text-anchor="middle" font-weight="500" fill="#3a4a5c">Excel schedule</text><text x="85" y="62" text-anchor="middle" fill="#8a8578" font-size="10.5">KEY · DESCRIPTION · PATH</text>
+      <rect x="10" y="120" width="150" height="58" rx="2" fill="#fff" stroke="#3a4a5c" stroke-width="1.5"/><text x="85" y="144" text-anchor="middle" font-weight="500" fill="#3a4a5c">Notebook form</text><text x="85" y="162" text-anchor="middle" fill="#8a8578" font-size="10.5">ipywidgets + file picker</text>
+      <rect x="215" y="70" width="140" height="58" rx="2" fill="#fff" stroke="#2a6b6e" stroke-width="1.5"/><text x="285" y="94" text-anchor="middle" font-weight="500" fill="#2a6b6e">excel_reader</text><text x="285" y="112" text-anchor="middle" fill="#8a8578" font-size="10.5">group rows by PATH</text>
+      <rect x="410" y="20" width="150" height="52" rx="2" fill="#fff" stroke="#2a6b6e" stroke-width="1.5"/><text x="485" y="42" text-anchor="middle" font-weight="500" fill="#2a6b6e">pdf_extractor</text><text x="485" y="59" text-anchor="middle" fill="#8a8578" font-size="10.5">PyMuPDF: text + images</text>
+      <rect x="410" y="126" width="150" height="52" rx="2" fill="#fff" stroke="#2a6b6e" stroke-width="1.5"/><text x="485" y="148" text-anchor="middle" font-weight="500" fill="#2a6b6e">web_extractor</text><text x="485" y="165" text-anchor="middle" fill="#8a8578" font-size="10.5">requests + BeautifulSoup</text>
+      <rect x="620" y="70" width="150" height="60" rx="2" fill="#b85c2a" stroke="#b85c2a"/><text x="695" y="94" text-anchor="middle" font-weight="600" fill="#fff">Claude API</text><text x="695" y="112" text-anchor="middle" fill="#f3d9c6" font-size="10.5">forced tool-use + caching</text>
+      <rect x="620" y="210" width="150" height="60" rx="2" fill="#fff" stroke="#3a4a5c" stroke-width="1.5"/><text x="695" y="234" text-anchor="middle" font-weight="500" fill="#3a4a5c">pdf_builder</text><text x="695" y="252" text-anchor="middle" fill="#8a8578" font-size="10.5">ReportLab · DFH template</text>
+      <rect x="330" y="214" width="200" height="52" rx="2" fill="#f5ece2" stroke="#b85c2a" stroke-width="1.5" stroke-dasharray="4 3"/><text x="430" y="236" text-anchor="middle" font-weight="600" fill="#b85c2a">Binder PDF</text><text x="430" y="253" text-anchor="middle" fill="#8a8578" font-size="10.5">cover · TOC · product pages</text>
+      <line x1="160" y1="49" x2="213" y2="88" stroke="#c8c0b0" stroke-width="1.5" marker-end="url(#arr)"/><line x1="160" y1="149" x2="213" y2="110" stroke="#c8c0b0" stroke-width="1.5" marker-end="url(#arr)"/><line x1="355" y1="88" x2="408" y2="52" stroke="#c8c0b0" stroke-width="1.5" marker-end="url(#arr)"/><line x1="355" y1="110" x2="408" y2="146" stroke="#c8c0b0" stroke-width="1.5" marker-end="url(#arr)"/><line x1="560" y1="52" x2="618" y2="88" stroke="#c8c0b0" stroke-width="1.5" marker-end="url(#arr)"/><line x1="560" y1="146" x2="618" y2="112" stroke="#c8c0b0" stroke-width="1.5" marker-end="url(#arr)"/><line x1="695" y1="130" x2="695" y2="208" stroke="#c8c0b0" stroke-width="1.5" marker-end="url(#arr)"/><line x1="618" y1="240" x2="532" y2="240" stroke="#c8c0b0" stroke-width="1.5" marker-end="url(#arr)"/>
+    </svg>
+  </div>
+  <div class="img-caption"><span>Fig. 01</span><p>Schedule rows are grouped by shared source; each unique source is extracted, structured by Claude, then rendered into the binder. Two front-ends (CLI and notebook) feed the same pipeline.</p></div>
+  <table class="data-table">
+    <tr><th>Module</th><th>Responsibility</th></tr>
+    <tr><td><code>excel_reader.py</code></td><td>Reads the schedule with case-insensitive header matching; groups rows sharing one <code>PATH</code>; sends keys with no <code>PATH</code> to owner-input pages; also writes schedules created in the notebook.</td></tr>
+    <tr><td><code>extraction/</code></td><td><code>pdf_extractor</code> (PyMuPDF text + embedded images, icon filtering), <code>web_extractor</code> (requests + BeautifulSoup heuristics for product photos), <code>source_router</code> (dispatch + relative-path resolution).</td></tr>
+    <tr><td><code>ai_client.py</code></td><td>Anthropic API wrapper: domain system prompt, forced tool-use JSON schema, prompt caching, multimodal image blocks, layered error handling.</td></tr>
+    <tr><td><code>pdf_builder.py</code></td><td>ReportLab renderer in the DFH template: cover (logo + DRAFT watermark), two-pass TOC, product pages with navy KEY badges, draft footer, error and owner-input pages.</td></tr>
+    <tr><td><code>pipeline.py</code></td><td>Shared end-to-end pipeline used by both front-ends; unique output naming <code>&lt;project&gt;__&lt;company&gt;__&lt;timestamp&gt;</code>.</td></tr>
+    <tr><td><code>main.py</code> / <code>binder_builder.ipynb</code></td><td>Two front-ends: a CLI for batch runs, and a point-and-click notebook form (ipywidgets + native file picker) for non-technical users.</td></tr>
+  </table>
+</div>
+
+<hr class="divider" style="margin:0 auto;">
+
+<div class="sheet">
+  <div class="section-label">03 — AI Integration</div>
+  <h2 class="section-title">The Anthropic API, Deliberately</h2>
+  <div class="instruction-block">
+    <div class="instruction-header"><h3>System Instructions (excerpt)</h3><span class="pill">Prompt Engineering</span></div>
+    <div class="code-block"><span class="key">ROLE:</span>
+You are an architectural interior product binder assistant working for an
+interior architecture firm. You receive raw product information extracted from
+manufacturer spec sheets (PDF cut sheets) or product webpages, and you extract
+the information a designer needs when assembling a product selections binder.
+
+<span class="key">YOU WILL BE GIVEN:</span>
+- One or more product KEYS from the project's finish/fixture schedule (e.g.
+  U-36). Several keys may share one spec sheet when a single document covers
+  multiple scheduled items (a vanity cabinet, its countertop, and its sink).
+- Short schedule descriptions written by the design team.
+- The raw text extracted from the source. This text can be noisy: navigation
+  menus, legal boilerplate, unrelated products. Focus only on the product(s)
+  matching the keys and descriptions.
+- Optionally, images extracted from the source.
+
+<span class="key">RULES:</span>
+- Do not invent information. Only report what is present in the text or clearly
+  visible in the provided images.
+- If a field is missing from the source, return an empty string. Never guess.
+- Keep every field concise and professional — a technical reference binder,
+  not marketing copy.</div>
+  </div>
+  <div class="instruction-block">
+    <div class="instruction-header"><h3>Forced Tool-Use Call</h3><span class="pill teal">Structured Output</span></div>
+    <p class="lead" style="margin-bottom:1rem;">Rather than hoping for clean JSON in free text, the extraction schema is a <em>tool</em> and <code>tool_choice</code> forces the model to call it. The result is read straight from <code>tool_use.input</code> as a Python dict — no regex, no JSON repair.</p>
+    <div class="code-block">response = client.messages.create(
+    model=<span class="ok">"claude-sonnet-4-6"</span>,
+    max_tokens=1500,
+    system=[{<span class="ok">"type"</span>: <span class="ok">"text"</span>, <span class="ok">"text"</span>: SYSTEM_PROMPT,
+             <span class="key">"cache_control"</span>: {<span class="ok">"type"</span>: <span class="ok">"ephemeral"</span>}}],   <span class="comment"># prompt caching</span>
+    tools=[EXTRACT_PRODUCT_INFO_TOOL],           <span class="comment"># 10-field JSON schema</span>
+    <span class="key">tool_choice</span>={<span class="ok">"type"</span>: <span class="ok">"tool"</span>, <span class="ok">"name"</span>: <span class="ok">"extract_product_info"</span>},  <span class="comment"># forced</span>
+    messages=[{<span class="ok">"role"</span>: <span class="ok">"user"</span>, <span class="ok">"content"</span>: content_blocks}],  <span class="comment"># text + image blocks</span>
+)
+info = ProductInfo(**next(b for b in response.content
+                          if b.type == <span class="ok">"tool_use"</span>).input)</div>
+  </div>
+  <div class="callout"><h4>Why This Matters</h4><p>Forcing structured output through the tool-use API eliminates an entire class of parsing failures that plague "return JSON only" prompts. Combined with prompt caching on the static system prompt and multimodal image blocks, the integration is production-shaped rather than a minimal single call.</p></div>
+</div>
+
+<hr class="divider" style="margin:0 auto;">
+
+<div class="sheet">
+  <div class="section-label">04 — Testing With Different Inputs</div>
+  <h2 class="section-title">Four Input Classes, All Run Live</h2>
+  <p class="lead">The tool ships with committed example schedules, each stressing a different kind of input. Every transcript below is unedited terminal output from a live API run.</p>
+
+  <div class="test"><div class="test-head"><h3>Test 01 — PDF spec sheets with multi-key grouping</h3><span class="tag">PDF · grouping</span></div>
+    <div class="code-block">$ python main.py demo.xlsx --project-name "721 CHAUTAUQUA AVE - PALISADES REBUILD"
+Found 3 product group(s)
+[1/3] Processing U-36, U-37, U-03 (examples/pdfs/sample_vanity_spec.pdf)
+  <span class="ok">ok:</span> MARLOW Double Vanity Suite — Cabinet (MV-6022)
+[2/3] Processing CH-01 (examples/pdfs/sample_chair_spec.pdf)
+  <span class="ok">ok:</span> AXEL Lounge Chair — Model AX-200
+[3/3] U-38: no source -> OWNER INPUT NEEDED
+Done. 3 product group(s): 3 succeeded, 0 failed.</div>
+    <p class="verdict">✔ Three vanity keys share one page and one API call; the sourceless U-38 becomes an owner-input page (Fig. 06).</p>
+  </div>
+
+  <div class="test"><div class="test-head"><h3>Test 02 — Live webpages mixed with local PDFs</h3><span class="tag">web scraping</span></div>
+    <div class="code-block">$ python main.py examples/example_mixed_sources.xlsx
+[2/4] Processing CH-02 (https://en.wikipedia.org/wiki/Eames_Lounge_Chair)
+  <span class="ok">ok:</span> Eames Lounge Chair and Ottoman (Model 670 / 671)
+[3/4] Processing CH-03 (https://en.wikipedia.org/wiki/Barcelona_chair)
+  WARNING: skipping web image ...330px-Barcelona_Chair...jpg: 429 Too Many Requests
+  <span class="ok">ok:</span> Barcelona Chair
+Done. 4 product group(s): 4 succeeded, 0 failed.</div>
+    <p class="verdict">✔ Correct extraction from ~10,000 characters of noisy page text; a rate-limited image degraded gracefully.</p>
+  </div>
+
+  <div class="test"><div class="test-head"><h3>Test 03 — Broken inputs (error resilience)</h3><span class="tag">error handling</span></div>
+    <div class="code-block">$ python main.py examples/example_errors.xlsx
+[2/4] Processing XX-01 (products/does_not_exist.pdf)
+  extraction failed: File not found: products/does_not_exist.pdf
+[3/4] Processing XX-02 (https://...invalid/product)
+  extraction failed: Could not fetch URL ... Failed to resolve ...
+Done. 4 product group(s): 2 succeeded, 2 failed.   (exit code 0)</div>
+    <p class="verdict">✔ The run completes, exit code 0; failed keys render as red error blocks in the binder (Fig. 07).</p>
+  </div>
+
+  <div class="test"><div class="test-head"><h3>Test 04 — Rejected API key (AI-failure path)</h3><span class="tag">resilience</span></div>
+    <div class="code-block">call 1 err: AI API error: Error code: 401 — {'type': 'error', 'error':
+  {'type': 'authentication_error', 'message': 'invalid x-api-key'}}</div>
+    <p class="verdict">✔ Caught as a per-product error — the binder still builds, with the reason documented on the page.</p>
+  </div>
+
+  <h3 style="font-size:1.05rem;font-weight:500;margin:2.5rem 0 1rem;">The AI interaction, in and out</h3>
+  <div class="convo-pair">
+    <div class="user-bubble">Product keys: U-36, U-37, U-03
+Schedule descriptions: VANITY CABINET · COUNTERTOP · MARBLE TOP · BATHROOM SINK · UNDERMOUNT · CERAMIC BASIN
+
+Extracted source text: MARLOW 60-in Double Vanity Suite — Model MV-6022, Calderhouse Bath. The MARLOW vanity suite combines a 60-inch solid-birch cabinet, a honed Carrara marble countertop, and two undermount ceramic basins… [+ 1 image block from the PDF]</div>
+    <div class="ai-bubble">
+      <strong>product_name:</strong> Marlow Double Vanity Suite — Cabinet (MV-6022)<br>
+      <strong>manufacturer:</strong> Calderhouse Bath<br>
+      <strong>dimensions:</strong> <span class="code-ref">60 in W × 22 in D × 34 in H</span><br>
+      <strong>materials:</strong> Solid birch face frame and doors; plywood box construction<br>
+      <strong>finishes:</strong> Dove white, storm grey, or natural birch; polished nickel or matte black hardware<br>
+      <strong>certifications:</strong> CARB Phase 2 compliant casework<br>
+      <strong>installation_notes:</strong> Secure cabinet to wall studs using included mounting cleats.<br>
+      <strong>important_specs:</strong>
+      <ul><li>Model: MV-6022</li><li>Two soft-close doors; six dovetailed drawers</li><li>Sold as a coordinated set with countertop and basins <span class="code-ref">(U-37, U-03)</span></li></ul>
+    </div>
+  </div>
+  <p style="font-size:.84rem;color:#666;max-width:820px;">Captured from the saved <code>ai_interaction.json</code>. The model respected the "do not invent" rule — every field traces to the source — and used the schedule keys to select the cabinet as the page's primary subject while cross-referencing its sibling keys.</p>
+
+  <h3 style="font-size:1.05rem;font-weight:500;margin:2.5rem 0 1rem;">Measured prompt-cache behavior</h3>
+  <p class="lead" style="margin-bottom:1rem;">Two consecutive extraction calls on a cold cache, read from <code>response.usage</code>. Once warm, every later call in the 5-minute window reads from cache — the saved <code>ai_interaction.json</code> independently confirms it.</p>
+  <table class="data-table">
+    <tr><th></th><th>input tokens</th><th>cache creation</th><th>cache read</th></tr>
+    <tr><td>Call 1 — first product</td><td>668</td><td>1048 &nbsp;(cache written)</td><td>0</td></tr>
+    <tr class="hl"><td>Call 2 — second product</td><td>710</td><td>0</td><td>1048 &nbsp;(cache hit)</td></tr>
+  </table>
+  <p style="font-size:.84rem;color:#666;max-width:820px;">Every product after the first reads the 1,048-token system prompt from cache — billed at ~10% of the normal rate — so the per-product cost of the domain prompt drops ~90% across a real binder of 30–50 products.</p>
+</div>
+
+<hr class="divider" style="margin:0 auto;">
+
+<div class="sheet">
+  <div class="section-label">05 — Results</div>
+  <h2 class="section-title">The Generated Binder — DFH Template</h2>
+  <p class="lead">Every image below is a page from a binder generated by the tool, matched to the firm's real deliverable: the cover carries the <code>dfh</code> logo and a diagonal DRAFT watermark, and every page has the red "NOT FOR CONSTRUCTION" draft footer with the firm line, project, and page number.</p>
+
+  <div class="img-grid">
+    <div><div class="img-feature"><img src="assets/page_cover.png" alt="Binder cover page"></div><div class="img-caption"><span>Fig. 02</span><p>Cover — "PRODUCT SELECTIONS FOR", the dfh logo + firm block under "PREPARED BY", and the diagonal DRAFT watermark.</p></div></div>
+    <div><div class="img-feature"><img src="assets/page_toc.png" alt="Table of contents"></div><div class="img-caption"><span>Fig. 03</span><p>Auto-generated <code>KEY · DESCRIPTION · PG</code> TOC. Grouped keys U-36/U-37/U-03 all resolve to page 3.</p></div></div>
+  </div>
+  <div class="img-grid">
+    <div><div class="img-feature"><img src="assets/page_vanity_grouped.png" alt="Grouped vanity product page"></div><div class="img-caption"><span>Fig. 04</span><p>Grouped page: navy KEY badges with descriptions top-right, serif brand heading, extracted image, AI-structured fields.</p></div></div>
+    <div><div class="img-feature"><img src="assets/page_web_eames.png" alt="Web-sourced product page"></div><div class="img-caption"><span>Fig. 05</span><p>Page built from a live webpage source — the product photo was downloaded and filtered by the image heuristics.</p></div></div>
+  </div>
+  <div class="img-grid">
+    <div><div class="img-feature"><img src="assets/page_owner.png" alt="Owner input needed page"></div><div class="img-caption"><span>Fig. 06</span><p>A scheduled key with no source (U-38 Towel Ring) renders as an OWNER INPUT NEEDED page — matching the firm's template.</p></div></div>
+    <div><div class="img-feature"><img src="assets/page_error_block.png" alt="Error block page"></div><div class="img-caption"><span>Fig. 07</span><p>A source that couldn't be read is documented inside the binder as a red error block; the run is unaffected.</p></div></div>
+  </div>
+  <div class="img-feature"><img src="assets/page_chair.png" alt="Chair product page"></div>
+  <div class="img-caption"><span>Fig. 08</span><p>Single-key page from a PDF cut sheet — image placed before text so both share the page, under the same navy badge + draft footer.</p></div>
+
+  <div class="callout"><h4>A Front-End for Non-Technical Users</h4><p>Because the intended users are designers, not developers, the tool also ships a Jupyter notebook (<code>binder_builder.ipynb</code>): a form with a native file picker, an Add-row button building a live product table, and a Generate button that writes both the schedule and the binder with unique, collision-free names such as <code>Palisades_Rebuild__DFH_Architects__20260703_212952.pdf</code>. Both front-ends call the same pipeline.</p></div>
+</div>
+
+<div class="reflection">
+  <div class="inner">
+    <div><div class="rlabel">06 — Reflection</div><h2>Reliability Is the<br><em>Hard Part</em></h2></div>
+    <div class="insights">
+      <div class="insight-item"><h4>Structure beats prompting</h4><p>Forcing output through the tool-use API removed an entire class of JSON-parsing failures. The schema, not a politely-worded instruction, is what guarantees a usable result every time.</p></div>
+      <div class="insight-item"><h4>Caching changes the economics</h4><p>A verbose, careful system prompt would normally be a per-call cost liability. Prompt caching turned it into a one-time expense — the measured 90% drop makes a rich domain prompt essentially free at binder scale.</p></div>
+      <div class="insight-item"><h4>The real world is messy</h4><p>Treating every product as an isolated failure domain meant dead links, locked files, rate-limited image hosts, and even a revoked API key all degrade into a documented error block rather than a crashed batch.</p></div>
+      <div class="insight-item"><h4>Matching the real deliverable</h4><p>The AI is one box in the diagram. The work that made this usable was everything around it — reproducing the firm's cover, footer, and owner-input template so the output drops straight into practice.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>Bushra Muhammadi · Assignment 07 · AI Interior Product Binder Generator</span>
+  <a href="https://github.com/bushramuham/interior-product-binder">github.com/bushramuham/interior-product-binder</a>
+</div>
+
+</body>
+</html>

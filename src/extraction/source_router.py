@@ -13,6 +13,8 @@ def extract_source(product: Product, xlsx_dir: str = "") -> ExtractedContent:
     also tried relative to the input spreadsheet's directory.
     """
     source = product.source_path
+    if product.source_type == "none" or not source:
+        return ExtractedContent(error="No source provided")
     if product.source_type == "url":
         return web_extractor.extract_url(source)
 

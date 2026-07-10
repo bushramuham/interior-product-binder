@@ -40,6 +40,10 @@ def process_products(
     results: list[ProductResult] = []
     for i, product in enumerate(products, start=1):
         keys = ", ".join(product.keys)
+        if product.source_type == "none":
+            log(f"[{i}/{len(products)}] {keys}: no source -> OWNER INPUT NEEDED")
+            results.append(ProductResult(product=product, needs_owner_input=True))
+            continue
         log(f"[{i}/{len(products)}] Processing {keys} ({product.source_path})")
         try:
             extracted = source_router.extract_source(product, xlsx_dir)

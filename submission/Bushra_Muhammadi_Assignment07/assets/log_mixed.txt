@@ -1,0 +1,16 @@
+Reading schedule: examples/example_mixed_sources.xlsx
+Found 4 product group(s)
+[1/4] Processing CH-01 (examples/pdfs/sample_chair_spec.pdf)
+  ok: AXEL Lounge Chair — Model AX-200
+[2/4] Processing CH-02 (https://en.wikipedia.org/wiki/Eames_Lounge_Chair)
+  WARNING: skipping web image https://en.wikipedia.org/static/images/mobile/copyright/wikipedia-wordmark-en-25.svg: cannot identify image file <_io.BytesIO object at 0x000002208AA3E070>
+  ok: Eames Lounge Chair and Ottoman (Model 670 / 671)
+[3/4] Processing CH-03 (https://en.wikipedia.org/wiki/Barcelona_chair)
+  WARNING: skipping web image https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Barcelona_Chair_Barcelona_Pavilion.jpg/330px-Barcelona_Chair_Barcelona_Pavilion.jpg: 429 Client Error: Too Many Requests (015d12c) for url: https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Barcelona_Chair_Barcelona_Pavilion.jpg/330px-Barcelona_Chair_Barcelona_Pavilion.jpg
+  ok: Barcelona Chair
+[4/4] Processing LT-01 (examples/pdfs/sample_light_fixture_spec.pdf)
+  ok: ORBIT 18 Pendant — Model OR-18-BR
+Building binder: submission\Bushra_Muhammadi_Assignment07\assets\binder_mixed.pdf
+Binder written to: submission\Bushra_Muhammadi_Assignment07\assets\binder_mixed.pdf
+
+Done. 4 group(s): 4 ok, 0 failed.

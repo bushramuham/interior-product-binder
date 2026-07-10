@@ -73,10 +73,10 @@ def load_products(xlsx_path: str) -> list[Product]:
         raise ValueError(f"Spreadsheet is empty: {xlsx_path}")
 
     columns = _map_headers(header_row)
-    if "key" not in columns.values() or "raw_path" not in columns.values():
+    if "key" not in columns.values():
         wb.close()
         raise ValueError(
-            f"Could not find required KEY and PATH columns in {xlsx_path}. "
+            f"Could not find the required KEY column in {xlsx_path}. "
             f"Found headers: {[str(c) for c in header_row if c is not None]}"
         )
 
@@ -96,12 +96,18 @@ def load_products(xlsx_path: str) -> list[Product]:
             page_hint=values.get("page_hint", ""),
         )
 
-        if not entry.key or not entry.raw_path:
-            if any([entry.key, entry.description, entry.raw_path]):
-                print(f"  WARNING: skipping row {row_num} (missing KEY or PATH)")
+        if not entry.key:
+            if any([entry.description, entry.raw_path]):
+                print(f"  WARNING: skipping row {row_num} (missing KEY)")
             continue
 
-        group_id, source_type = _normalize_source(entry.raw_path)
+        if entry.raw_path:
+            group_id, source_type = _normalize_source(entry.raw_path)
+        else:
+            # A scheduled key with no source yet -> its own "owner input needed"
+            # page; never grouped with other sourceless rows.
+            group_id, source_type = f"__nosource__{row_num}", "none"
+
         if group_id not in groups:
             groups[group_id] = Product(
                 group_id=group_id,

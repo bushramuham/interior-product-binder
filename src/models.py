@@ -71,3 +71,4 @@ class ProductResult:
     info: ProductInfo | None = None
     representative_image: str | None = None
     error: str | None = None
+    needs_owner_input: bool = False  # key scheduled but no source provided yet

@@ -91,13 +91,11 @@ STYLE_BULLET = ParagraphStyle("FieldBullet", parent=STYLE_BODY, leftIndent=14, b
 STYLE_ERROR = ParagraphStyle(
     "ErrorBody", parent=STYLE_BODY, textColor=colors.HexColor("#8a1f11"),
 )
+# Same font and size as the schedule description, just bold red; sits directly
+# under the description in the key block.
 STYLE_OWNER = ParagraphStyle(
-    "Owner", parent=_styles["Normal"], fontSize=22, leading=26, fontName="Helvetica-Bold",
-    textColor=colors.HexColor("#c00000"), alignment=1, spaceBefore=40, spaceAfter=8,
-)
-STYLE_OWNER_SUB = ParagraphStyle(
-    "OwnerSub", parent=_styles["Normal"], fontSize=10, textColor=colors.HexColor("#555555"),
-    alignment=1,
+    "Owner", parent=STYLE_KEY_DESC, fontName="Helvetica-Bold",
+    textColor=colors.HexColor("#c00000"), spaceBefore=6,
 )
 STYLE_TOC_TITLE = ParagraphStyle(
     "TocTitle", parent=_styles["Heading1"], fontSize=14, spaceAfter=12, textColor=CHARCOAL,
@@ -271,10 +269,6 @@ def _product_story(result: ProductResult) -> list:
     # 1) Scheduled key with no source yet.
     if result.needs_owner_input:
         story.append(Paragraph("OWNER INPUT NEEDED.", STYLE_OWNER))
-        story.append(Paragraph(
-            "No specification source has been provided for this item.",
-            STYLE_OWNER_SUB,
-        ))
         story.append(PageBreak())
         return story
 

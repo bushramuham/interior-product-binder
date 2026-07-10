@@ -1,7 +1,7 @@
 Reading schedule: submission\Bushra_Muhammadi_Assignment07\assets\demo_schedule.xlsx
 Found 3 product group(s)
 [1/3] Processing U-36, U-37, U-03 (examples/pdfs/sample_vanity_spec.pdf)
-  ok: MARLOW Double Vanity Suite – Vanity Cabinet (36-in, single configuration)
+  ok: MARLOW 60-in Double Vanity Suite – Cabinet (U-36)
 [2/3] Processing CH-01 (examples/pdfs/sample_chair_spec.pdf)
   ok: AXEL Lounge Chair — Model AX-200
 [3/3] U-38: no source -> OWNER INPUT NEEDED

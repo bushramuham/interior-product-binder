@@ -2,32 +2,32 @@
   "model": "claude-sonnet-4-6",
   "input_excerpt": "Product keys: U-36, U-37, U-03\nSchedule descriptions: VANITY CABINET - 60-IN | VANITY COUNTERTOP - 60-IN | MARBLE TOP | BATHROOM SINK | UNDERMOUNT | CERAMIC BASIN\n\nExtracted source text:\nMARLOW 60-in Double Vanity Suite \u2014 Model\nMV-6022\nCalderhouse Bath\nThe MARLOW vanity suite combines a 60-inch solid-birch cabinet, a honed Carrara marble countertop,\nand two undermount ceramic basins sold as a coordinated set.\nCabinet: 60 in W x 22 in D x 34 in H, two soft-close doors and six dovetailed drawers. Countertop: 61 in\nW x 22.5 in D x 1.25 in thick, pre-drilled for 8-in widespread faucets.\nMaterials: solid birch cabinet with plywood box, natural Carrara marble top, vitreous china basins.\nFinishes: cabinet in dove white, storm grey, or natural birch; polished nickel or matte black hardware.\nCertifications: cUPC listed basins. CARB Phase 2 compliant casework.\nInstallation: secure cabinet to wall studs with included cleats. Marble top requires two installers; seal\nbefore first use. Rough-in drain at 21 in AFF recommended.\nCare: reseal marble every 12 months. Clean with pH-neutral stone cleaner only. Wipe cabinet with\ndamp cloth.\n",
   "structured_output": {
-    "product_name": "MARLOW 60-in Double Vanity Cabinet",
+    "product_name": "MARLOW 60-in Double Vanity Suite \u2014 Cabinet (U-36)",
     "manufacturer": "Calderhouse Bath",
-    "description": "The Marlow 60-in Double Vanity Cabinet (Model MV-6022) is part of a coordinated vanity suite by Calderhouse Bath. The cabinet is constructed of solid birch with a plywood box and features two soft-close doors and six dovetailed drawers. It is sold as part of a suite that includes a honed Carrara marble countertop and two undermount ceramic basins. Available in three cabinet finishes with a choice of two hardware finishes.",
+    "description": "The Marlow 60-in Double Vanity Cabinet is part of a coordinated vanity suite (Model MV-6022) by Calderhouse Bath. The cabinet is constructed of solid birch with a plywood box and features two soft-close doors and six dovetailed drawers. It is available in three finish options with a choice of hardware finishes. The cabinet is sold as part of a suite that includes a Carrara marble countertop and two undermount ceramic basins.",
     "dimensions": "60 in W x 22 in D x 34 in H",
     "materials": "Solid birch with plywood box construction",
-    "finishes": "Cabinet: Dove White, Storm Grey, or Natural Birch; Hardware: Polished Nickel or Matte Black",
+    "finishes": "Dove White, Storm Grey, or Natural Birch cabinet finish; Polished Nickel or Matte Black hardware",
     "certifications": "CARB Phase 2 compliant casework",
-    "installation_notes": "Secure cabinet to wall studs using included cleats. Rough-in drain recommended at 21 in AFF.",
-    "care_notes": "Wipe cabinet with a damp cloth. Do not use abrasive or chemical cleaners on cabinet surfaces.",
+    "installation_notes": "Secure cabinet to wall studs using included cleats. Rough-in drain at 21 in AFF recommended.",
+    "care_notes": "Wipe cabinet surfaces with a damp cloth.",
     "important_specs": [
-      "Model No.: MV-6022",
+      "Model: MV-6022 (suite)",
       "Two soft-close doors",
       "Six dovetailed drawers",
-      "Sold as part of coordinated suite with countertop and basins (see U-37, U-03)"
+      "Sold as coordinated suite with countertop and basins"
     ]
   },
   "usage_call_1": {
     "input_tokens": 787,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 1048,
-    "output_tokens": 1369
+    "output_tokens": 1320
   },
   "usage_call_2": {
     "input_tokens": 787,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 1048,
-    "output_tokens": 1332
+    "output_tokens": 1315
   }
 }

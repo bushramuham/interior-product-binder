@@ -3,8 +3,8 @@ Found 4 product group(s)
 [1/4] Processing CH-01 (examples/pdfs/sample_chair_spec.pdf)
   ok: AXEL Lounge Chair — Model AX-200
 [2/4] Processing CH-02 (https://en.wikipedia.org/wiki/Eames_Lounge_Chair)
-  WARNING: skipping web image https://en.wikipedia.org/static/images/mobile/copyright/wikipedia-wordmark-en-25.svg: cannot identify image file <_io.BytesIO object at 0x0000021A28BF1030>
-  ok: Eames Lounge Chair and Ottoman (670 & 671)
+  WARNING: skipping web image https://en.wikipedia.org/static/images/mobile/copyright/wikipedia-wordmark-en-25.svg: cannot identify image file <_io.BytesIO object at 0x0000016F510C5030>
+  ok: Eames Lounge Chair and Ottoman (Model 670 / 671)
 [3/4] Processing CH-03 (https://en.wikipedia.org/wiki/Barcelona_chair)
   ok: Barcelona Chair
 [4/4] Processing LT-01 (examples/pdfs/sample_light_fixture_spec.pdf)

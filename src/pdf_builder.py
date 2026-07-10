@@ -17,7 +17,6 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import (
-    HRFlowable,
     Image,
     PageBreak,
     Paragraph,
@@ -42,6 +41,11 @@ WATERMARK = colors.HexColor("#cdcdcd")   # diagonal DRAFT watermark
 DRAFT_RED = colors.HexColor("#ec1c24")   # "DRAFT ... NOT FOR CONSTRUCTION" banner
 DRAFT_RED_ALPHA = 0.5                    # half-tone (screened) red
 MARGIN = 0.5 * inch                      # matches the firm's page margins
+
+# Key/description block geometry (shared so the owner note lines up under it).
+KEY_DESC_COL = 3.2 * inch                # description column width
+CODE_COL = 1.05 * inch                   # boxed KEY code column width
+DESC_RPAD = 10                           # description right padding before the box
 
 _styles = getSampleStyleSheet()
 STYLE_COVER_LABEL = ParagraphStyle(
@@ -97,7 +101,8 @@ STYLE_ERROR = ParagraphStyle(
 # under the description in the key block.
 STYLE_OWNER = ParagraphStyle(
     "Owner", parent=STYLE_KEY_DESC, fontName="Helvetica-Bold",
-    textColor=colors.HexColor("#c00000"), spaceBefore=6,
+    textColor=colors.HexColor("#c00000"), spaceBefore=3,
+    rightIndent=CODE_COL + DESC_RPAD,  # right edge aligns under the description
 )
 STYLE_TOC_TITLE = ParagraphStyle(
     "TocTitle", parent=_styles["Heading1"], fontSize=14, spaceAfter=12, textColor=CHARCOAL,
@@ -247,11 +252,11 @@ def _key_desc_block(product) -> Table:
          Paragraph(_escape(e.key), STYLE_CODE)]
         for e in product.entries
     ]
-    block = Table(rows, colWidths=[3.2 * inch, 1.05 * inch], hAlign="RIGHT")
+    block = Table(rows, colWidths=[KEY_DESC_COL, CODE_COL], hAlign="RIGHT")
     block.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ALIGN", (0, 0), (0, -1), "RIGHT"),
-        ("RIGHTPADDING", (0, 0), (0, -1), 10),
+        ("RIGHTPADDING", (0, 0), (0, -1), DESC_RPAD),
         ("LEFTPADDING", (0, 0), (0, -1), 0),
         ("BOX", (1, 0), (1, -1), 1.1, NAVY),
         ("INNERGRID", (1, 0), (1, -1), 1.1, NAVY),
@@ -265,12 +270,10 @@ def _brand_heading(info) -> list:
     brand = (info.manufacturer or info.product_name) if info else ""
     if not brand:
         return []
-    out = [Spacer(1, 14), HRFlowable(width="100%", thickness=1, color=colors.black),
-           Spacer(1, 4), Paragraph(_escape(brand), STYLE_BRAND)]
+    out = [Spacer(1, 14), Paragraph(_escape(brand), STYLE_BRAND)]
     if info.manufacturer and info.product_name and info.product_name != brand:
         out.append(Paragraph(_escape(info.product_name), STYLE_BRAND_SUB))
-    out += [Spacer(1, 4), HRFlowable(width="100%", thickness=1, color=colors.black),
-            Spacer(1, 10)]
+    out += [Spacer(1, 10)]
     return out
 
 

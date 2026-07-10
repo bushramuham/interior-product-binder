@@ -7,7 +7,7 @@ Found 4 product group(s)
 [3/4] Processing XX-02 (https://this-domain-does-not-exist-xyz123.example.invalid/product)
   extraction failed: Could not fetch URL 'https://this-domain-does-not-exist-xyz123.example.invalid/product': HTTPSConnectionPool(host='this-domain-does-not-exist-xyz123.example.invalid', port=443): Max retries exceeded with url: /product (Caused by NameResolutionError("HTTPSConnection(host='this-domain-does-not-exist-xyz123.example.invalid', port=443): Failed to resolve 'this-domain-does-not-exist-xyz123.example.invalid' ([Errno 11001] getaddrinfo failed)"))
 [4/4] Processing U-36, U-37 (examples/pdfs/sample_vanity_spec.pdf)
-  ok: MARLOW 60-in Double Vanity Suite – Vanity Cabinet (Model MV-6022)
+  ok: MARLOW 60-in Double Vanity Suite – Cabinet (Model MV-6022)
 Building binder: submission\Bushra_Muhammadi_Assignment07\assets\binder_errors.pdf
 Binder written to: submission\Bushra_Muhammadi_Assignment07\assets\binder_errors.pdf
 

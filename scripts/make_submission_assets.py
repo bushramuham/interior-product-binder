@@ -61,17 +61,19 @@ def run(xlsx: str, out_pdf: str, project: str, name: str) -> None:
     print(f"ran {name}: binder + log saved")
 
 
-def find_page(doc, *needles) -> int | None:
+def find_page(doc, *needles, exclude: str | None = None) -> int | None:
     for i, pg in enumerate(doc):
         text = pg.get_text().lower()
+        if exclude and exclude.lower() in text:
+            continue
         if all(n.lower() in text for n in needles):
             return i
     return None
 
 
-def render(pdf: str, out_name: str, *needles, dpi: int = 105) -> None:
+def render(pdf: str, out_name: str, *needles, exclude: str | None = None, dpi: int = 105) -> None:
     doc = fitz.open(os.path.join(ASSETS, pdf))
-    idx = find_page(doc, *needles)
+    idx = find_page(doc, *needles, exclude=exclude)
     if idx is not None:
         doc[idx].get_pixmap(dpi=dpi).save(os.path.join(ASSETS, out_name))
         print(f"rendered {out_name} (page {idx + 1})")
@@ -136,7 +138,7 @@ def main() -> int:
     render("binder_demo.pdf", "page_cover.png", "prepared by")
     render("binder_demo.pdf", "page_toc.png", "table of contents")
     render("binder_demo.pdf", "page_vanity_grouped.png", "u-36", "materials")
-    render("binder_demo.pdf", "page_chair.png", "ch-01", "dimensions")  # product page, not TOC
+    render("binder_demo.pdf", "page_chair.png", "ch-01", exclude="table of contents")
     render("binder_demo.pdf", "page_owner.png", "owner input needed")
     render("binder_mixed.pdf", "page_web_eames.png", "eames", "materials")
     render("binder_errors.pdf", "page_error_block.png", "could not generate")

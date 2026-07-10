@@ -93,7 +93,7 @@ STYLE_ERROR = ParagraphStyle(
 )
 STYLE_OWNER = ParagraphStyle(
     "Owner", parent=_styles["Normal"], fontSize=22, leading=26, fontName="Helvetica-Bold",
-    textColor=NAVY, alignment=1, spaceBefore=40, spaceAfter=8,
+    textColor=colors.HexColor("#c00000"), alignment=1, spaceBefore=40, spaceAfter=8,
 )
 STYLE_OWNER_SUB = ParagraphStyle(
     "OwnerSub", parent=_styles["Normal"], fontSize=10, textColor=colors.HexColor("#555555"),
@@ -154,9 +154,10 @@ def _draw_watermark(canvas) -> None:
     canvas.saveState()
     canvas.setFont("Helvetica", 144)
     canvas.setFillColor(WATERMARK)
-    canvas.translate(letter[0] * 0.40, letter[1] * 0.50)
+    canvas.translate(letter[0] / 2, letter[1] / 2)
     canvas.rotate(45)
-    canvas.drawCentredString(0, 0, "DRAFT")
+    # Vertically center the glyphs on the page center (cap height ~0.7 em).
+    canvas.drawCentredString(0, -0.35 * 144, "DRAFT")
     canvas.restoreState()
 
 
@@ -269,7 +270,7 @@ def _product_story(result: ProductResult) -> list:
 
     # 1) Scheduled key with no source yet.
     if result.needs_owner_input:
-        story.append(Paragraph("OWNER INPUT NEEDED", STYLE_OWNER))
+        story.append(Paragraph("OWNER INPUT NEEDED.", STYLE_OWNER))
         story.append(Paragraph(
             "No specification source has been provided for this item.",
             STYLE_OWNER_SUB,
@@ -345,7 +346,7 @@ def _toc_story(
         )
         table.setStyle(TableStyle([
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+            ("BACKGROUND", (0, 0), (-1, 0), colors.black),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
             ("FONTSIZE", (0, 0), (-1, -1), 10),
             ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),

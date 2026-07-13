@@ -6,6 +6,20 @@ from src.extraction import pdf_extractor, web_extractor
 from src.models import ExtractedContent, Product
 
 
+def resolve_local(product: Product, xlsx_dir: str = "") -> str | None:
+    """Return the local PDF path (as-is, then relative to the spreadsheet), or None."""
+    source = product.source_path
+    if not source or product.source_type != "pdf":
+        return None
+    if os.path.exists(source):
+        return source
+    if xlsx_dir and not os.path.isabs(source):
+        candidate = os.path.join(xlsx_dir, source)
+        if os.path.exists(candidate):
+            return candidate
+    return None
+
+
 def extract_source(product: Product, xlsx_dir: str = "") -> ExtractedContent:
     """Extract text/images from the product's source.
 

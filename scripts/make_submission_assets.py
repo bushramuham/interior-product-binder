@@ -97,10 +97,10 @@ def build_demo_binder(out_pdf: str) -> None:
 
     towel = Product("g3", "", "none", [ProductEntry("U-38", "TOWEL RING")])
     results = [
-        ProductResult(vanity, info=vanity_info,
-                      representative_image=_first_image("examples/pdfs/sample_vanity_spec.pdf")),
-        ProductResult(chair, info=chair_info,
-                      representative_image=_first_image("examples/pdfs/sample_chair_spec.pdf")),
+        # PDF sources -> overlay mode (source pages embedded verbatim + stamped).
+        ProductResult(vanity, source_pdf_path="examples/pdfs/sample_vanity_spec.pdf"),
+        ProductResult(chair, source_pdf_path="examples/pdfs/sample_chair_spec.pdf"),
+        # URL source -> rebuilt page (no PDF to overlay).
         ProductResult(eames, info=eames_info, representative_image=web_img),
         ProductResult(towel, needs_owner_input=True),
     ]

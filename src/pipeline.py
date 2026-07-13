@@ -33,6 +33,15 @@ def reset_temp_images() -> None:
     os.makedirs(config.TEMP_IMAGE_DIR, exist_ok=True)
 
 
+def _is_readable_pdf(path: str) -> bool:
+    try:
+        import fitz
+        with fitz.open(path) as d:
+            return d.is_pdf and d.page_count > 0
+    except Exception:
+        return False
+
+
 def process_products(
     products: list[Product], xlsx_dir: str = "", log=print
 ) -> list[ProductResult]:
@@ -44,6 +53,21 @@ def process_products(
             log(f"[{i}/{len(products)}] {keys}: no source -> OWNER INPUT NEEDED")
             results.append(ProductResult(product=product, needs_owner_input=True))
             continue
+
+        # PDF source: embed the original pages verbatim (overlay mode), no AI.
+        if product.source_type == "pdf":
+            resolved = source_router.resolve_local(product, xlsx_dir)
+            if resolved and _is_readable_pdf(resolved):
+                log(f"[{i}/{len(products)}] {keys}: overlay source {os.path.basename(resolved)}")
+                results.append(ProductResult(product=product, source_pdf_path=resolved))
+            else:
+                reason = (f"File not found: {product.source_path}" if not resolved
+                          else f"Not a readable PDF: {product.source_path}")
+                log(f"[{i}/{len(products)}] {keys}: {reason}")
+                results.append(ProductResult(product=product, error=reason))
+            continue
+
+        # URL source: scrape + AI-extract into a rebuilt page.
         log(f"[{i}/{len(products)}] Processing {keys} ({product.source_path})")
         try:
             extracted = source_router.extract_source(product, xlsx_dir)

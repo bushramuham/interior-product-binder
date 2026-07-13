@@ -11,6 +11,7 @@ import io
 import math
 import os
 
+import fitz
 from PIL import Image as PILImage
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -41,6 +42,11 @@ WATERMARK = colors.HexColor("#cdcdcd")   # diagonal DRAFT watermark
 DRAFT_RED = colors.HexColor("#ec1c24")   # "DRAFT ... NOT FOR CONSTRUCTION" banner
 DRAFT_RED_ALPHA = 0.5                    # half-tone (screened) red
 MARGIN = 0.5 * inch                      # matches the firm's page margins
+
+# RGB (0-1) equivalents for PyMuPDF stamping onto embedded source pages.
+NAVY_RGB = (0x25 / 255, 0x40 / 255, 0x8f / 255)
+RED_HALF_RGB = (0.925, 0.545, 0.55)      # solid look of the half-tone draft red
+BLACK_RGB = (0, 0, 0)
 
 # Key/description block geometry (shared so the owner note lines up under it).
 KEY_DESC_COL = 3.2 * inch                # description column width
@@ -119,59 +125,52 @@ def _date_short() -> str:
     return f"{d.month}/{d.day}/{str(d.year)[-2:]}"
 
 
-class _BinderDoc(SimpleDocTemplate):
-    """SimpleDocTemplate that records the page each tagged product heading lands on."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.page_numbers: dict[str, int] = {}
-
-    def afterFlowable(self, flowable):
-        group_id = getattr(flowable, "_product_group_id", None)
-        if group_id is not None and group_id not in self.page_numbers:
-            self.page_numbers[group_id] = self.page
-
-
 def _escape(text) -> str:
     return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-# ─── Page furniture (footer on every page, watermark on the cover) ────────────
-def _draw_footer(canvas, project_name: str) -> None:
-    width = letter[0]
-    # The firm's footer uses a short project name (text before the first " - ").
+# ─── PyMuPDF stamping (footer on every page, KEY badges on source pages) ──────
+def _fitz_right(page, x_right, y, text, size, color, bold=False):
+    font = "hebo" if bold else "helv"
+    tw = fitz.get_text_length(text, fontname=font, fontsize=size)
+    page.insert_text((x_right - tw, y), text, fontname=font, fontsize=size, color=color)
+
+
+def _fitz_center(page, x_center, y, text, size, color, bold=False):
+    font = "hebo" if bold else "helv"
+    tw = fitz.get_text_length(text, fontname=font, fontsize=size)
+    page.insert_text((x_center - tw / 2, y), text, fontname=font, fontsize=size, color=color)
+
+
+def _stamp_footer(page, project_name: str, page_no: int | None) -> None:
+    """Half-tone red draft banner + firm/project/page footer, drawn in the margin."""
+    w, h = page.rect.width, page.rect.height
     short = project_name.split(" - ")[0].strip() or project_name
-    canvas.saveState()
-    # Half-tone red draft banner, centered above the footer line, on every page.
-    canvas.setFont("Helvetica-Bold", 14)
-    canvas.setFillColor(DRAFT_RED)
-    try:
-        canvas.setFillAlpha(DRAFT_RED_ALPHA)
-    except Exception:
-        pass
-    canvas.drawCentredString(
-        width / 2, 44, f"DRAFT {_date_short()} - NOT FOR CONSTRUCTION"
-    )
-    try:
-        canvas.setFillAlpha(1)
-    except Exception:
-        pass
-    canvas.setFillColor(colors.black)
-    # Company name left-aligned.
-    canvas.setFont("Helvetica", 10)
-    canvas.drawString(MARGIN, 24, config.FIRM_LLP)
-    # Everything else right-aligned: page number at the edge, project line to its left.
-    right = width - MARGIN
-    page_no = canvas.getPageNumber() - 1  # cover unnumbered; content from 1
-    if page_no >= 1:
-        canvas.setFont("Helvetica", 12)
-        canvas.drawRightString(right, 23, str(page_no))
+    _fitz_center(page, w / 2, h - 44, f"DRAFT {_date_short()} - NOT FOR CONSTRUCTION",
+                 14, RED_HALF_RGB, bold=True)
+    page.insert_text((MARGIN, h - 24), config.FIRM_LLP, fontname="helv", fontsize=10,
+                     color=BLACK_RGB)
+    right = w - MARGIN
+    if page_no is not None:
+        _fitz_right(page, right, h - 23, str(page_no), 12, BLACK_RGB)
         right -= 0.45 * inch
-    canvas.setFont("Helvetica", 10)
-    canvas.drawRightString(
-        right, 24, f"{short} - {config.BINDER_TAG} - {_date_long()}"
-    )
-    canvas.restoreState()
+    _fitz_right(page, right, h - 24, f"{short} - {config.BINDER_TAG} - {_date_long()}",
+                10, BLACK_RGB)
+
+
+def _stamp_badges(page, product) -> None:
+    """Stamp the navy KEY code boxes + descriptions on a source page's top-right."""
+    w = page.rect.width
+    right = w - MARGIN
+    bw, bh, top = CODE_COL, 41, MARGIN
+    for i, entry in enumerate(product.entries):
+        y0 = top + i * bh
+        box = fitz.Rect(right - bw, y0, right, y0 + bh)
+        page.draw_rect(box, color=NAVY_RGB, width=1.1)
+        _fitz_center(page, box.x0 + bw / 2, y0 + bh / 2 + 9, entry.key, 26, NAVY_RGB)
+        if entry.description:
+            _fitz_right(page, right - bw - DESC_RPAD, y0 + bh / 2 + 4,
+                        entry.description, 12, NAVY_RGB)
 
 
 def _draw_watermark(canvas) -> None:
@@ -350,7 +349,7 @@ def _toc_story(
     rows = [["KEY", "DESCRIPTION", "P#"]]
     for result in results:
         pg = page_numbers.get(result.product.group_id)
-        pg_str = str(pg - 1) if isinstance(pg, int) else "?"  # cover unnumbered
+        pg_str = str(pg) if isinstance(pg, int) else "?"
         for entry in result.product.entries:
             rows.append([entry.key, entry.description, pg_str])
 
@@ -377,34 +376,38 @@ def _toc_story(
     return story
 
 
-def _toc_placeholder(toc_pages: int) -> list:
-    story: list = []
-    for _ in range(toc_pages):
-        story.extend([Spacer(1, 1), PageBreak()])
-    return story
-
-
 # ─── Document assembly ────────────────────────────────────────────────────────
-def _build_doc(target, story, project_name: str) -> "_BinderDoc":
-    doc = _BinderDoc(
-        target,
-        pagesize=letter,
-        leftMargin=MARGIN,
-        rightMargin=MARGIN,
-        topMargin=MARGIN,
-        bottomMargin=0.6 * inch,  # leaves room for the footer
+def _render_story_pdf(story: list, watermark: bool = False) -> bytes:
+    """Render a flowable story to PDF bytes with no footer (stamped later by fitz)."""
+    if story and isinstance(story[-1], PageBreak):
+        story = story[:-1]
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=letter, leftMargin=MARGIN, rightMargin=MARGIN,
+        topMargin=MARGIN, bottomMargin=0.85 * inch,  # clears the stamped footer/banner
         title="Interior Product Binder",
     )
+    if watermark:
+        doc.build(story, onFirstPage=lambda c, _d: _draw_watermark(c))
+    else:
+        doc.build(story)
+    return buf.getvalue()
 
-    def on_first(canvas, _doc):
-        _draw_watermark(canvas)   # DRAFT watermark on the cover only
-        _draw_footer(canvas, project_name)
 
-    def on_later(canvas, _doc):
-        _draw_footer(canvas, project_name)
-
-    doc.build(story, onFirstPage=on_first, onLaterPages=on_later)
-    return doc
+def _open_product_doc(result: ProductResult):
+    """Return (fitz_doc, kind) for a product: 'pdf' embeds the source verbatim,
+    'rebuilt' is a ReportLab page for URL / owner / error products."""
+    src = result.source_pdf_path
+    if src and not result.error and not result.needs_owner_input:
+        try:
+            doc = fitz.open(src)
+            if doc.is_pdf and doc.page_count > 0:
+                return doc, "pdf"
+            doc.close()
+        except Exception as e:
+            print(f"  WARNING: could not open source PDF '{src}': {e}")
+            result.error = f"Could not open source PDF: {os.path.basename(src)}"
+    return fitz.open("pdf", _render_story_pdf(_product_story(result))), "rebuilt"
 
 
 def build_binder(
@@ -413,45 +416,55 @@ def build_binder(
     project_name: str,
     prepared_by: str = "",
 ) -> str:
-    """Two-pass build: pass 1 discovers page numbers, pass 2 renders the real TOC.
+    """Assemble the binder with PyMuPDF: cover + TOC + one entry per product.
 
-    Returns the path actually written. If ``output_path`` is locked (e.g. the
-    binder is open in a PDF viewer), a timestamped fallback file is written
-    instead so a full run is never lost to a file lock.
+    PDF-sourced products are embedded verbatim and only stamped with the KEY
+    badges, footer, and page number; URL / owner / error products are rebuilt
+    pages. Returns the path actually written (a timestamped fallback if the
+    target is locked).
     """
     toc_pages = _toc_pages_needed(results)
-    product_stories = [_product_story(r) for r in results]
+    cover = fitz.open("pdf", _render_story_pdf(_cover_story(project_name), watermark=True))
 
-    def assemble(toc_story: list) -> list:
-        story = _cover_story(project_name) + list(toc_story)
-        for ps in product_stories:
-            story.extend(ps)
-        if story and isinstance(story[-1], PageBreak):
-            story.pop()
-        return story
+    # Prepare each product's pages and its printed start page number.
+    entries = [dict(zip(("doc", "kind"), _open_product_doc(r)), result=r) for r in results]
+    printed = 1 + toc_pages  # cover = page 0 (unnumbered); TOC = 1..toc_pages
+    for e in entries:
+        e["start"] = printed
+        printed += e["doc"].page_count
+    page_numbers = {e["result"].product.group_id: e["start"] for e in entries}
 
-    # Pass 1: placeholder TOC pages, harvest real page numbers.
-    pass1 = _build_doc(io.BytesIO(), assemble(_toc_placeholder(toc_pages)), project_name)
+    toc = fitz.open("pdf", _render_story_pdf(_toc_story(results, page_numbers, toc_pages)))
+
+    binder = fitz.open()
+    binder.insert_pdf(cover)
+    binder.insert_pdf(toc)
+    while binder.page_count - 1 < toc_pages:      # keep TOC exactly toc_pages long
+        binder.new_page(width=letter[0], height=letter[1])
+    while binder.page_count - 1 > toc_pages:
+        binder.delete_page(binder.page_count - 1)
+
+    first_page_of = {}
+    for e in entries:
+        first_page_of[binder.page_count] = e
+        binder.insert_pdf(e["doc"])
+
+    for i in range(binder.page_count):
+        page = binder[i]
+        _stamp_footer(page, project_name, page_no=(None if i == 0 else i))
+        e = first_page_of.get(i)
+        if e and e["kind"] == "pdf":
+            _stamp_badges(page, e["result"].product)
 
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-
-    def write_pass2(target: str) -> None:
-        product_stories[:] = [_product_story(r) for r in results]
-        _build_doc(
-            target, assemble(_toc_story(results, pass1.page_numbers, toc_pages)),
-            project_name,
-        )
-
     try:
-        write_pass2(output_path)
+        binder.save(output_path, deflate=True, garbage=3)
         return output_path
-    except PermissionError:
+    except Exception:
         base, ext = os.path.splitext(output_path)
         stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         fallback = f"{base}_{stamp}{ext}"
-        print(
-            f"  WARNING: '{output_path}' is locked (open in another program?). "
-            f"Writing to '{fallback}' instead."
-        )
-        write_pass2(fallback)
+        print(f"  WARNING: '{output_path}' is locked (open in another program?). "
+              f"Writing to '{fallback}' instead.")
+        binder.save(fallback, deflate=True, garbage=3)
         return fallback

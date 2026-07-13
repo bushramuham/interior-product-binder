@@ -72,3 +72,4 @@ class ProductResult:
     representative_image: str | None = None
     error: str | None = None
     needs_owner_input: bool = False  # key scheduled but no source provided yet
+    source_pdf_path: str | None = None  # resolved local PDF to embed verbatim (overlay mode)

@@ -4,30 +4,30 @@
   "structured_output": {
     "product_name": "Marlow 60-in Double Vanity Cabinet \u2014 Model MV-6022",
     "manufacturer": "Calderhouse Bath",
-    "description": "The Marlow vanity cabinet is a 60-inch double vanity constructed from solid birch with a plywood box. It features two soft-close doors and six dovetailed drawers. The cabinet is part of the Marlow Suite (Model MV-6022), sold as a coordinated set with a marble countertop and undermount ceramic basins.",
-    "dimensions": "60 in W x 22 in D x 34 in H",
+    "description": "The Marlow vanity cabinet is a 60-inch double vanity offered by Calderhouse Bath as part of the Marlow suite (Model MV-6022). The cabinet is constructed of solid birch with a plywood box and features two soft-close doors and six dovetailed drawers. It is available in three finish colors with a choice of hardware finish. The cabinet is CARB Phase 2 compliant.",
+    "dimensions": "60 in W \u00d7 22 in D \u00d7 34 in H",
     "materials": "Solid birch cabinet with plywood box construction",
-    "finishes": "Dove White, Storm Grey, or Natural Birch cabinet finish; Polished Nickel or Matte Black hardware",
+    "finishes": "Cabinet: Dove White, Storm Grey, or Natural Birch; Hardware: Polished Nickel or Matte Black",
     "certifications": "CARB Phase 2 compliant casework",
-    "installation_notes": "Secure cabinet to wall studs using included cleats. Rough-in drain at 21 in AFF recommended.",
+    "installation_notes": "Secure cabinet to wall studs using included cleats. Rough-in drain recommended at 21 in AFF.",
     "care_notes": "Wipe cabinet with a damp cloth.",
     "important_specs": [
-      "Model No.: MV-6022",
+      "Model: MV-6022",
       "Two soft-close doors",
       "Six dovetailed drawers",
-      "Sold as coordinated suite with countertop and basins"
+      "Sold as part of coordinated Marlow suite with countertop and basins"
     ]
   },
   "usage_call_1": {
     "input_tokens": 787,
-    "cache_creation_input_tokens": 0,
-    "cache_read_input_tokens": 1048,
-    "output_tokens": 1257
+    "cache_creation_input_tokens": 1048,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 1258
   },
   "usage_call_2": {
     "input_tokens": 787,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 1048,
-    "output_tokens": 1347
+    "output_tokens": 1386
   }
 }

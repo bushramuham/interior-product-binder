@@ -188,7 +188,7 @@ def _stamp_watermark(page) -> None:
     # Baseline start so the text is centered on the page before rotation.
     origin = fitz.Point(w / 2 - tw / 2, h / 2 + 0.35 * size)
     page.insert_text(origin, "DRAFT", fontname="helv", fontsize=size,
-                     color=WATERMARK_RGB,
+                     color=WATERMARK_RGB, fill_opacity=0.35,
                      morph=(center, fitz.Matrix(1, 1).prerotate(45)))
 
 

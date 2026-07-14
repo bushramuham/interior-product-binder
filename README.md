@@ -92,15 +92,25 @@ The tool needs an API key to talk to Claude. Get one from the
 
 A form appears under the last cell:
 
-1. **Project details** — type your project name and who it's prepared by.
-2. **Add products** — for each product:
-   - Type a **KEY** (a short label, e.g. `U-36`) and a **Description**.
-   - Set the **Source**: click **Browse…** to pick a PDF from your computer, or
-     paste a webpage link (`https://…`).
-   - Need PG, Description 2, or Description 3? Expand **Optional details**.
-   - Click **Add row**. The product appears in the table. Repeat for every
-     product. (Products with the same Source are grouped onto one page.)
+1. **Project details** — type your project name and who it's prepared by, and
+   tick or untick **Draft binder**. Draft (the default) adds the diagonal
+   DRAFT watermark on the cover and the red "DRAFT {date} - NOT FOR
+   CONSTRUCTION" line on every page; unticking produces a clean final binder.
+2. **Products** — pick a mode:
+   - **Manual entry** — for each product, type a **KEY** (e.g. `U-36`) and a
+     **Description**, set the **Source** (click **Browse…** for a PDF, or
+     paste a webpage link, or leave blank for an OWNER INPUT NEEDED page),
+     then click **Add row**. Every row in the list has **Edit** and
+     **Delete** buttons — Edit loads the row back into the form and the
+     button becomes **Update row**. (Products with the same Source are
+     grouped onto one page.)
+   - **Import Excel** — browse to an existing schedule `.xlsx` that already
+     has the KEY / DESCRIPTION / PATH columns populated; nothing to retype.
 3. Click **Generate binder**. Progress prints below the button.
+
+> PDF sources are embedded in the binder **unchanged** — the tool only adds
+> the key notes, footer, and page number on top. Your original spec-sheet
+> files are never modified.
 
 Your finished binder is saved in the **`output/`** folder with a unique name
 that includes the project, the firm, and the date/time, e.g.
@@ -126,6 +136,32 @@ you built is saved next to it as a matching `.xlsx` so you can reuse it later.)
 - **Windows "path too long" error while installing** — this project pins the
   notebook widgets to an older version to avoid it. If you still hit it, move
   the project to a short folder like `C:\ipb` and redo Step 2.
+
+---
+
+# The desktop app (.exe — no Python needed)
+
+For users who shouldn't have to install anything: a windowed desktop app with
+the same features as the notebook (manual rows with Edit/Delete, Excel import,
+the Draft checkbox, one-click generate, an "Open binder" button).
+
+**Using it:** double-click `DFH_Binder_Generator.exe`. Put a `.env` file
+(copied from `.env.example`, with the API key and company name) **next to the
+exe** — it's only required for webpage sources; binders built purely from PDF
+spec sheets work without it. Binders are written to an `output/` folder created
+next to the exe.
+
+**Building it** (one-time, from the repo, inside the venv):
+
+```bash
+pip install pyinstaller
+python scripts/build_exe.py
+```
+
+This produces `dist/DFH_Binder_Generator.exe` (~60 MB, self-contained). Ship
+that single file plus a `.env`. Build artifacts (`build/`, `dist/`, `*.spec`)
+are gitignored. You can also run the same app from source with
+`python gui.py`.
 
 ---
 
@@ -179,7 +215,8 @@ Notes:
   paths are resolved against the current directory first, then the
   spreadsheet's own folder.
 - Rows with the same `PATH` are grouped into one binder page.
-- Rows missing `KEY` or `PATH` are skipped with a warning.
+- Rows with a `KEY` but no `PATH` get an OWNER INPUT NEEDED page; rows missing
+  `KEY` are skipped with a warning.
 
 ## CLI options
 
@@ -189,6 +226,7 @@ Notes:
 | `--project-name` | `Untitled Project` | Cover page project name |
 | `--prepared-by` | `COMPANY_NAME` from `.env` | Cover page "prepared by" line |
 | `--max-images` | `3` | Max images extracted/sent per product |
+| `--final` | off (draft) | Final binder: no DRAFT watermark, no NOT FOR CONSTRUCTION line, no `[DRAFT]` tag |
 
 The command exits `0` even when individual products fail (they render as error
 boxes), and prints a `N succeeded, M failed` summary.
@@ -199,6 +237,8 @@ boxes), and prints a `N succeeded, M failed` summary.
 
 ```
 binder_builder.ipynb         Point-and-click notebook front-end
+gui.py                       Desktop app (also packaged as the Windows exe)
+scripts/build_exe.py         Builds dist/DFH_Binder_Generator.exe (PyInstaller)
 main.py                      Command-line entry point
 config.py                    Model name + limits
 src/excel_reader.py          Schedule reading/writing + grouping by shared PATH

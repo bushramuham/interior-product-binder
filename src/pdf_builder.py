@@ -142,19 +142,21 @@ def _fitz_center(page, x_center, y, text, size, color, bold=False):
     page.insert_text((x_center - tw / 2, y), text, fontname=font, fontsize=size, color=color)
 
 
-def _stamp_footer(page, project_name: str, page_no: int | None) -> None:
-    """Half-tone red draft banner + firm/project/page footer, drawn in the margin."""
+def _stamp_footer(page, project_name: str, page_no: int | None, draft: bool = True) -> None:
+    """Firm/project/page footer; in draft mode also the half-tone red draft banner."""
     w, h = page.rect.width, page.rect.height
     short = project_name.split(" - ")[0].strip() or project_name
-    _fitz_center(page, w / 2, h - 44, f"DRAFT {_date_short()} - NOT FOR CONSTRUCTION",
-                 14, RED_HALF_RGB, bold=True)
+    if draft:
+        _fitz_center(page, w / 2, h - 44, f"DRAFT {_date_short()} - NOT FOR CONSTRUCTION",
+                     14, RED_HALF_RGB, bold=True)
     page.insert_text((MARGIN, h - 24), config.FIRM_LLP, fontname="helv", fontsize=10,
                      color=BLACK_RGB)
+    tag = config.BINDER_TAG + (" [DRAFT]" if draft else "")
     right = w - MARGIN
     if page_no is not None:
         _fitz_right(page, right, h - 23, str(page_no), 12, BLACK_RGB)
         right -= 0.45 * inch
-    _fitz_right(page, right, h - 24, f"{short} - {config.BINDER_TAG} - {_date_long()}",
+    _fitz_right(page, right, h - 24, f"{short} - {tag} - {_date_long()}",
                 10, BLACK_RGB)
 
 
@@ -410,21 +412,49 @@ def _open_product_doc(result: ProductResult):
     return fitz.open("pdf", _render_story_pdf(_product_story(result))), "rebuilt"
 
 
+FOOTER_ZONE = 0.85 * inch   # bottom band reserved for the banner + footer line
+BADGE_ROW_H = 41            # height of one KEY badge row (matches _stamp_badges)
+HEADER_GAP = 12             # gap between the badge block and the embedded page
+
+
+def _embed_source_page(binder, src, pno: int, product, first: bool) -> None:
+    """Add one binder page holding a source page scaled (aspect preserved) into
+    the zone between the KEY badge header and the footer band — no overlap."""
+    page = binder.new_page(width=letter[0], height=letter[1])
+    w, h = page.rect.width, page.rect.height
+    header_h = (MARGIN + BADGE_ROW_H * len(product.entries) + HEADER_GAP
+                if first else MARGIN)
+    zone = fitz.Rect(MARGIN, header_h, w - MARGIN, h - FOOTER_ZONE)
+
+    sr = src[pno].rect
+    scale = min(zone.width / sr.width, zone.height / sr.height)
+    dw, dh = sr.width * scale, sr.height * scale
+    x0 = zone.x0 + (zone.width - dw) / 2   # centered horizontally
+    y0 = zone.y0                            # top-aligned under the header
+    page.show_pdf_page(fitz.Rect(x0, y0, x0 + dw, y0 + dh), src, pno)
+    if first:
+        _stamp_badges(page, product)
+
+
 def build_binder(
     results: list[ProductResult],
     output_path: str,
     project_name: str,
     prepared_by: str = "",
+    draft: bool = True,
 ) -> str:
     """Assemble the binder with PyMuPDF: cover + TOC + one entry per product.
 
-    PDF-sourced products are embedded verbatim and only stamped with the KEY
-    badges, footer, and page number; URL / owner / error products are rebuilt
-    pages. Returns the path actually written (a timestamped fallback if the
-    target is locked).
+    PDF-sourced products are embedded verbatim, uniformly scaled to fit
+    between the KEY badge header and the footer band (never overlapping
+    either); URL / owner / error products are rebuilt pages. With ``draft``
+    (default) the cover carries the diagonal DRAFT watermark and every page
+    gets the red "DRAFT ... NOT FOR CONSTRUCTION" line and a "[DRAFT]" footer
+    tag; ``draft=False`` removes all draft marks. Returns the path actually
+    written (a timestamped fallback if the target is locked).
     """
     toc_pages = _toc_pages_needed(results)
-    cover = fitz.open("pdf", _render_story_pdf(_cover_story(project_name), watermark=True))
+    cover = fitz.open("pdf", _render_story_pdf(_cover_story(project_name), watermark=draft))
 
     # Prepare each product's pages and its printed start page number.
     entries = [dict(zip(("doc", "kind"), _open_product_doc(r)), result=r) for r in results]
@@ -444,17 +474,18 @@ def build_binder(
     while binder.page_count - 1 > toc_pages:
         binder.delete_page(binder.page_count - 1)
 
-    first_page_of = {}
     for e in entries:
-        first_page_of[binder.page_count] = e
-        binder.insert_pdf(e["doc"])
+        if e["kind"] == "pdf":
+            src = e["doc"]
+            for pno in range(src.page_count):
+                _embed_source_page(binder, src, pno, e["result"].product,
+                                   first=(pno == 0))
+        else:
+            binder.insert_pdf(e["doc"])
 
     for i in range(binder.page_count):
-        page = binder[i]
-        _stamp_footer(page, project_name, page_no=(None if i == 0 else i))
-        e = first_page_of.get(i)
-        if e and e["kind"] == "pdf":
-            _stamp_badges(page, e["result"].product)
+        _stamp_footer(binder[i], project_name, page_no=(None if i == 0 else i),
+                      draft=draft)
 
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     try:

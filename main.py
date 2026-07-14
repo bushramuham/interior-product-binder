@@ -39,6 +39,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help=f"Max images per product (default {config.MAX_IMAGES_PER_PRODUCT})",
     )
+    parser.add_argument(
+        "--final",
+        action="store_true",
+        help="Produce a final (non-draft) binder: no DRAFT watermark, no "
+        "'NOT FOR CONSTRUCTION' line, no [DRAFT] footer tag",
+    )
     return parser.parse_args()
 
 
@@ -67,7 +73,8 @@ def main() -> int:
 
     try:
         results = pipeline.generate_from_xlsx(
-            args.input_xlsx, output_path, args.project_name, prepared_by
+            args.input_xlsx, output_path, args.project_name, prepared_by,
+            draft=not args.final,
         )
     except ValueError as e:
         print(f"ERROR: {e}")

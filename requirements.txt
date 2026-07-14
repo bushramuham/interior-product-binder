@@ -11,3 +11,6 @@ openpyxl
 # Pinned <8 so the bundled widget assets stay within Windows' 260-char path
 # limit when the repo lives under a long folder (e.g. OneDrive\Desktop\...).
 ipywidgets<8
+
+# Packaging (optional; only needed to build the Windows exe via scripts/build_exe.py)
+pyinstaller

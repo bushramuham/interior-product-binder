@@ -17,7 +17,9 @@ def _slug(text: str, fallback: str) -> str:
     return cleaned[:60] or fallback
 
 
-def unique_output_base(project_name: str, prepared_by: str, output_dir: str = "output") -> str:
+def unique_output_base(
+    project_name: str, prepared_by: str, output_dir: str = config.OUTPUT_DIR
+) -> str:
     """Return a collision-free base path: output/<project>__<company>__<timestamp>.
 
     Callers append '.pdf' / '.xlsx'. The timestamp makes every run unique.
@@ -105,6 +107,7 @@ def generate_from_xlsx(
     project_name: str,
     prepared_by: str,
     log=print,
+    draft: bool = True,
 ) -> list[ProductResult]:
     """Load a schedule, process every product, and write the binder PDF."""
     reset_temp_images()
@@ -116,6 +119,8 @@ def generate_from_xlsx(
     results = process_products(products, xlsx_dir, log)
 
     log(f"Building binder: {output_path}")
-    actual = pdf_builder.build_binder(results, output_path, project_name, prepared_by)
+    actual = pdf_builder.build_binder(
+        results, output_path, project_name, prepared_by, draft=draft
+    )
     log(f"Binder written to: {actual}")
     return results

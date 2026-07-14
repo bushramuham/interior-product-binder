@@ -48,6 +48,57 @@ def save_schedule(rows: list[dict], path: str) -> None:
     wb.save(path)
 
 
+# Canonical field name -> schedule header (for load_rows round-tripping).
+_FIELD_TO_HEADER = {
+    "key": "KEY", "description": "DESCRIPTION", "page_hint": "PG",
+    "raw_path": "PATH", "description2": "DESCRIPTION2", "description3": "DESCRIPTION3",
+}
+
+
+def load_rows(xlsx_path: str) -> list[dict]:
+    """Read a schedule into flat row dicts keyed by SCHEDULE_HEADERS (for
+    review/editing in the front-ends). Relative PATH values are made absolute
+    against the spreadsheet's own folder when they resolve there, so the rows
+    can be re-saved anywhere without breaking."""
+    wb = load_workbook(xlsx_path, read_only=True, data_only=True)
+    ws = wb.active
+    it = ws.iter_rows(values_only=True)
+    try:
+        header_row = next(it)
+    except StopIteration:
+        wb.close()
+        raise ValueError(f"Spreadsheet is empty: {xlsx_path}")
+    columns = _map_headers(header_row)
+    if "key" not in columns.values():
+        wb.close()
+        raise ValueError(
+            f"Could not find the required KEY column in {xlsx_path}. "
+            f"Found headers: {[str(c) for c in header_row if c is not None]}"
+        )
+
+    xlsx_dir = os.path.dirname(os.path.abspath(xlsx_path))
+    out: list[dict] = []
+    for row in it:
+        rec = {h: "" for h in SCHEDULE_HEADERS}
+        for idx, fieldname in columns.items():
+            cell = row[idx] if idx < len(row) else None
+            rec[_FIELD_TO_HEADER[fieldname]] = str(cell).strip() if cell is not None else ""
+        if not rec["KEY"]:
+            continue
+        path = rec["PATH"]
+        if path and not path.lower().startswith(("http://", "https://")) \
+                and not os.path.isabs(path):
+            if os.path.exists(path):                     # CWD-relative
+                rec["PATH"] = os.path.abspath(path)
+            else:                                        # schedule-relative
+                candidate = os.path.normpath(os.path.join(xlsx_dir, path))
+                if os.path.exists(candidate):
+                    rec["PATH"] = candidate
+        out.append(rec)
+    wb.close()
+    return out
+
+
 def _map_headers(header_row) -> dict[int, str]:
     """Map column index -> canonical field name, case-insensitively."""
     mapping = {}

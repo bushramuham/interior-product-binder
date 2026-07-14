@@ -175,15 +175,21 @@ def _stamp_badges(page, product) -> None:
                         entry.description, 12, NAVY_RGB)
 
 
-def _draw_watermark(canvas) -> None:
-    canvas.saveState()
-    canvas.setFont("Helvetica", 144)
-    canvas.setFillColor(WATERMARK)
-    canvas.translate(letter[0] / 2, letter[1] / 2)
-    canvas.rotate(45)
-    # Vertically center the glyphs on the page center (cap height ~0.7 em).
-    canvas.drawCentredString(0, -0.35 * 144, "DRAFT")
-    canvas.restoreState()
+WATERMARK_RGB = (0xcd / 255, 0xcd / 255, 0xcd / 255)
+
+
+def _stamp_watermark(page) -> None:
+    """Diagonal DRAFT across the page, stamped AFTER the content so it sits on
+    the top layer (in front of the logo)."""
+    w, h = page.rect.width, page.rect.height
+    size = 144
+    tw = fitz.get_text_length("DRAFT", fontname="helv", fontsize=size)
+    center = fitz.Point(w / 2, h / 2)
+    # Baseline start so the text is centered on the page before rotation.
+    origin = fitz.Point(w / 2 - tw / 2, h / 2 + 0.35 * size)
+    page.insert_text(origin, "DRAFT", fontname="helv", fontsize=size,
+                     color=WATERMARK_RGB,
+                     morph=(center, fitz.Matrix(1, 1).prerotate(45)))
 
 
 def _image_flowable(path: str) -> Image | None:
@@ -378,8 +384,25 @@ def _toc_story(
     return story
 
 
+def _add_toc_links(binder, toc_pages: int, key_to_index: dict[str, int]) -> None:
+    """Turn each TOC row into a clickable GOTO link to its product page."""
+    key_col_max_x = MARGIN + 0.9 * inch + 10   # KEY column width in the TOC table
+    for pi in range(1, min(toc_pages + 1, binder.page_count)):
+        page = binder[pi]
+        for x0, y0, x1, y1, word, *_ in page.get_text("words"):
+            target = key_to_index.get(word)
+            if target is None or x0 > key_col_max_x:
+                continue
+            page.insert_link({
+                "kind": fitz.LINK_GOTO,
+                "from": fitz.Rect(MARGIN, y0 - 2, page.rect.width - MARGIN, y1 + 2),
+                "page": target,
+                "to": fitz.Point(0, 0),
+            })
+
+
 # ─── Document assembly ────────────────────────────────────────────────────────
-def _render_story_pdf(story: list, watermark: bool = False) -> bytes:
+def _render_story_pdf(story: list) -> bytes:
     """Render a flowable story to PDF bytes with no footer (stamped later by fitz)."""
     if story and isinstance(story[-1], PageBreak):
         story = story[:-1]
@@ -389,10 +412,7 @@ def _render_story_pdf(story: list, watermark: bool = False) -> bytes:
         topMargin=MARGIN, bottomMargin=0.85 * inch,  # clears the stamped footer/banner
         title="Interior Product Binder",
     )
-    if watermark:
-        doc.build(story, onFirstPage=lambda c, _d: _draw_watermark(c))
-    else:
-        doc.build(story)
+    doc.build(story)
     return buf.getvalue()
 
 
@@ -454,7 +474,7 @@ def build_binder(
     written (a timestamped fallback if the target is locked).
     """
     toc_pages = _toc_pages_needed(results)
-    cover = fitz.open("pdf", _render_story_pdf(_cover_story(project_name), watermark=draft))
+    cover = fitz.open("pdf", _render_story_pdf(_cover_story(project_name)))
 
     # Prepare each product's pages and its printed start page number.
     entries = [dict(zip(("doc", "kind"), _open_product_doc(r)), result=r) for r in results]
@@ -486,6 +506,16 @@ def build_binder(
     for i in range(binder.page_count):
         _stamp_footer(binder[i], project_name, page_no=(None if i == 0 else i),
                       draft=draft)
+    if draft:
+        _stamp_watermark(binder[0])   # after content -> top layer, over the logo
+
+    # Make each TOC row a clickable link to its product's first page.
+    # Printed page numbers equal binder page indexes (cover is unnumbered 0).
+    key_to_index = {
+        entry.key: e["start"]
+        for e in entries for entry in e["result"].product.entries
+    }
+    _add_toc_links(binder, toc_pages, key_to_index)
 
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     try:

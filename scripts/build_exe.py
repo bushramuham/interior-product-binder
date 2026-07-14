@@ -9,6 +9,7 @@ webpage sources; binders built purely from PDF sources work without it.
 """
 
 import os
+import shutil
 import subprocess
 import sys
 
@@ -30,9 +31,19 @@ def main() -> int:
     print(" ".join(cmd))
     result = subprocess.run(cmd)
     if result.returncode == 0:
-        exe = os.path.join(REPO_ROOT, "dist", "DFH_Binder_Generator.exe")
+        dist = os.path.join(REPO_ROOT, "dist")
+        exe = os.path.join(dist, "DFH_Binder_Generator.exe")
         print(f"\nBuilt: {exe} ({os.path.getsize(exe) / 1e6:.1f} MB)")
-        print("Ship it together with a .env file (see .env.example).")
+        # Ship a .env next to the exe: copy the repo's .env if present,
+        # otherwise the .env.example template for the user to fill in.
+        for candidate in (".env", ".env.example"):
+            src = os.path.join(REPO_ROOT, candidate)
+            if os.path.exists(src):
+                shutil.copy(src, os.path.join(dist, ".env"))
+                print(f"Copied {candidate} -> dist/.env")
+                break
+        else:
+            print("WARNING: no .env or .env.example found to copy into dist/")
     return result.returncode
 
 

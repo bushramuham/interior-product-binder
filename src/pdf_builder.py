@@ -49,8 +49,10 @@ RED_HALF_RGB = (0.925, 0.545, 0.55)      # solid look of the half-tone draft red
 BLACK_RGB = (0, 0, 0)
 
 # Key/description block geometry (shared so the owner note lines up under it).
-KEY_DESC_COL = 3.2 * inch                # description column width
+# The description column spans the full usable width (7.5in frame minus the
+# code box) so single-line descriptions never wrap prematurely.
 CODE_COL = 1.05 * inch                   # boxed KEY code column width
+KEY_DESC_COL = 7.5 * inch - CODE_COL     # description column width
 DESC_RPAD = 10                           # description right padding before the box
 
 _styles = getSampleStyleSheet()

@@ -80,6 +80,14 @@ STYLE_KEY_DESC = ParagraphStyle(
     "KeyDesc", parent=_styles["Normal"], fontSize=12, leading=14,
     textColor=NAVY, alignment=2,  # right, sits left of the code box
 )
+STYLE_KEY_DESC2 = ParagraphStyle(
+    "KeyDesc2", parent=STYLE_KEY_DESC, fontSize=9, leading=11,
+    textColor=colors.HexColor("#cc0000"),
+)
+STYLE_KEY_DESC3 = ParagraphStyle(
+    "KeyDesc3", parent=STYLE_KEY_DESC, fontSize=7.5, leading=9,
+    textColor=colors.black,
+)
 STYLE_CODE = ParagraphStyle(
     "Code", parent=_styles["Normal"], fontSize=26, leading=30,
     fontName="Helvetica", textColor=NAVY, alignment=1,
@@ -160,19 +168,33 @@ def _stamp_footer(page, project_name: str, page_no: int | None, draft: bool = Tr
                 10, BLACK_RGB)
 
 
+DESC2_RED_RGB = (0.8, 0, 0)
+
+
 def _stamp_badges(page, product) -> None:
-    """Stamp the navy KEY code boxes + descriptions on a source page's top-right."""
+    """Stamp the navy KEY code boxes + descriptions on a source page's top-right.
+
+    Each entry row: DESCRIPTION (12pt navy), then DESCRIPTION2 (9pt red), then
+    DESCRIPTION3 (7.5pt black) stacked beneath it — all right-aligned against
+    the code box.
+    """
     w = page.rect.width
     right = w - MARGIN
-    bw, bh, top = CODE_COL, 41, MARGIN
+    bw, bh, top = CODE_COL, BADGE_ROW_H, MARGIN
+    text_right = right - bw - DESC_RPAD
     for i, entry in enumerate(product.entries):
         y0 = top + i * bh
         box = fitz.Rect(right - bw, y0, right, y0 + bh)
         page.draw_rect(box, color=NAVY_RGB, width=1.1)
         _fitz_center(page, box.x0 + bw / 2, y0 + bh / 2 + 9, entry.key, 26, NAVY_RGB)
+        extras = bool(entry.description2 or entry.description3)
         if entry.description:
-            _fitz_right(page, right - bw - DESC_RPAD, y0 + bh / 2 + 4,
-                        entry.description, 12, NAVY_RGB)
+            desc_y = y0 + 14 if extras else y0 + bh / 2 + 4
+            _fitz_right(page, text_right, desc_y, entry.description, 12, NAVY_RGB)
+        if entry.description2:
+            _fitz_right(page, text_right, y0 + 26, entry.description2, 9, DESC2_RED_RGB)
+        if entry.description3:
+            _fitz_right(page, text_right, y0 + 36, entry.description3, 7.5, BLACK_RGB)
 
 
 WATERMARK_RGB = (0xcd / 255, 0xcd / 255, 0xcd / 255)
@@ -253,12 +275,16 @@ def _cover_story(project_name: str) -> list:
 
 # ─── Product page pieces ──────────────────────────────────────────────────────
 def _key_desc_block(product) -> Table:
-    """Description (left, navy) + boxed navy KEY code (right), one row per entry."""
-    rows = [
-        [Paragraph(_escape(e.description), STYLE_KEY_DESC),
-         Paragraph(_escape(e.key), STYLE_CODE)]
-        for e in product.entries
-    ]
+    """Descriptions (left, stacked: navy / small red / smaller black) + boxed
+    navy KEY code (right), one row per entry."""
+    rows = []
+    for e in product.entries:
+        cell = [Paragraph(_escape(e.description), STYLE_KEY_DESC)]
+        if e.description2:
+            cell.append(Paragraph(_escape(e.description2), STYLE_KEY_DESC2))
+        if e.description3:
+            cell.append(Paragraph(_escape(e.description3), STYLE_KEY_DESC3))
+        rows.append([cell, Paragraph(_escape(e.key), STYLE_CODE)])
     block = Table(rows, colWidths=[KEY_DESC_COL, CODE_COL], hAlign="RIGHT")
     block.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -437,13 +463,13 @@ BADGE_ROW_H = 41            # height of one KEY badge row (matches _stamp_badges
 HEADER_GAP = 12             # gap between the badge block and the embedded page
 
 
-def _embed_source_page(binder, src, pno: int, product, first: bool) -> None:
+def _embed_source_page(binder, src, pno: int, product) -> None:
     """Add one binder page holding a source page scaled (aspect preserved) into
-    the zone between the KEY badge header and the footer band — no overlap."""
+    the zone between the KEY badge header and the footer band — no overlap.
+    Every page of a multi-page source carries the same KEY badge header."""
     page = binder.new_page(width=letter[0], height=letter[1])
     w, h = page.rect.width, page.rect.height
-    header_h = (MARGIN + BADGE_ROW_H * len(product.entries) + HEADER_GAP
-                if first else MARGIN)
+    header_h = MARGIN + BADGE_ROW_H * len(product.entries) + HEADER_GAP
     zone = fitz.Rect(MARGIN, header_h, w - MARGIN, h - FOOTER_ZONE)
 
     sr = src[pno].rect
@@ -452,8 +478,7 @@ def _embed_source_page(binder, src, pno: int, product, first: bool) -> None:
     x0 = zone.x0 + (zone.width - dw) / 2   # centered horizontally
     y0 = zone.y0                            # top-aligned under the header
     page.show_pdf_page(fitz.Rect(x0, y0, x0 + dw, y0 + dh), src, pno)
-    if first:
-        _stamp_badges(page, product)
+    _stamp_badges(page, product)
 
 
 def build_binder(
@@ -498,8 +523,7 @@ def build_binder(
         if e["kind"] == "pdf":
             src = e["doc"]
             for pno in range(src.page_count):
-                _embed_source_page(binder, src, pno, e["result"].product,
-                                   first=(pno == 0))
+                _embed_source_page(binder, src, pno, e["result"].product)
         else:
             binder.insert_pdf(e["doc"])
 

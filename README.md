@@ -206,17 +206,20 @@ Your `.xlsx` needs a header row containing at least **KEY** and **PATH**
 | --- | --- | --- |
 | `KEY` | yes | Schedule key, e.g. `U-36` |
 | `PATH` (or `SOURCE`) | yes | Local path to a spec-sheet PDF, **or** an `http(s)://` product page URL |
-| `DESCRIPTION` | no | Schedule description shown in the TOC and product page |
-| `DESCRIPTION2`, `DESCRIPTION3` | no | Extra description text, passed to the AI as context |
-| `PG` (or `PAGE`) | no | Kept for reference; page numbers are recalculated |
+| `DESCRIPTION` | no | Schedule description shown in the TOC and next to the KEY badge |
+| `DESCRIPTION2`, `DESCRIPTION3` | no | Shown under the description in the key header (small red, then smaller black); also passed to the AI as context for webpage sources |
+| `PG` (or `PAGE`) | no | Groups sourceless rows: rows with no `PATH` that share a `PG` value land on one OWNER INPUT NEEDED page. Binder page numbers are always recalculated |
 
 Notes:
 - Local `PATH` values must be reachable from where you run the tool. Relative
   paths are resolved against the current directory first, then the
   spreadsheet's own folder.
 - Rows with the same `PATH` are grouped into one binder page.
-- Rows with a `KEY` but no `PATH` get an OWNER INPUT NEEDED page; rows missing
+- Rows with a `KEY` but no `PATH` get an OWNER INPUT NEEDED page; give several
+  sourceless rows the same `PG` value to group them onto one page. Rows missing
   `KEY` are skipped with a warning.
+- Products are ordered alphabetically by KEY in the binder and the TOC,
+  regardless of row order in the spreadsheet.
 
 ## CLI options
 

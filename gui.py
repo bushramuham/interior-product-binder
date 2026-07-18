@@ -96,7 +96,7 @@ class BinderApp:
         ttk.Label(form, text="KEY:").grid(row=0, column=0, sticky="w")
         ttk.Label(form, text="Description:").grid(row=0, column=2, sticky="w")
         ttk.Label(form, text="Source:").grid(row=1, column=0, sticky="w")
-        ttk.Label(form, text="PG:").grid(row=2, column=0, sticky="w")
+        ttk.Label(form, text="PG (group):").grid(row=2, column=0, sticky="w")
         ttk.Label(form, text="Description 2:").grid(row=3, column=0, sticky="w")
         ttk.Label(form, text="Description 3:").grid(row=4, column=0, sticky="w")
 
@@ -111,6 +111,9 @@ class BinderApp:
             row=1, column=4, padx=2)
         ttk.Entry(form, textvariable=self.field_vars["PG"], width=14).grid(
             row=2, column=1, sticky="w", padx=4)
+        ttk.Label(form, text="Rows with no Source that share a PG value are "
+                             "grouped onto one OWNER INPUT NEEDED page.",
+                  foreground="#666666").grid(row=2, column=2, columnspan=2, sticky="w")
         ttk.Entry(form, textvariable=self.field_vars["DESCRIPTION2"]).grid(
             row=3, column=1, columnspan=3, sticky="we", padx=4)
         ttk.Entry(form, textvariable=self.field_vars["DESCRIPTION3"]).grid(

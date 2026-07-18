@@ -154,10 +154,13 @@ def load_products(xlsx_path: str) -> list[Product]:
 
         if entry.raw_path:
             group_id, source_type = _normalize_source(entry.raw_path)
+        elif entry.page_hint:
+            # Sourceless rows that share a PG value are grouped onto one
+            # OWNER INPUT NEEDED page.
+            group_id, source_type = f"__nosource__pg_{entry.page_hint.lower()}", "none"
         else:
-            # A scheduled key with no source yet -> its own "owner input needed"
-            # page; never grouped with other sourceless rows.
-            group_id, source_type = f"__nosource__{row_num}", "none"
+            # Sourceless row with no PG -> its own OWNER INPUT NEEDED page.
+            group_id, source_type = f"__nosource__row_{row_num}", "none"
 
         if group_id not in groups:
             groups[group_id] = Product(
@@ -168,4 +171,10 @@ def load_products(xlsx_path: str) -> list[Product]:
         groups[group_id].entries.append(entry)
 
     wb.close()
-    return list(groups.values())
+    # Lexicographic order everywhere: keys within each group, then groups by
+    # their first key. This drives page order and the TOC.
+    products = list(groups.values())
+    for p in products:
+        p.entries.sort(key=lambda e: e.key.upper())
+    products.sort(key=lambda p: p.entries[0].key.upper())
+    return products

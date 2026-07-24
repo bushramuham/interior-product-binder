@@ -46,7 +46,7 @@ FIRM_ROLE = "Principal"
 FIRM_EMAIL = "email: block@dfhaia.com"
 FIRM_LLP = "DFH ARCHITECTS LLP"
 FIRM_LOGO_PATH = resource_path(os.path.join("assets", "dfh_logo.jpeg"))  # text logo drawn if absent
-BINDER_TAG = "INTERIOR FFE"               # footer tag; " [DRAFT]" appended in draft mode
+BINDER_TAG = "FFE"                        # footer tag; " [DRAFT]" appended in draft mode
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
